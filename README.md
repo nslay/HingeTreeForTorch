@@ -89,11 +89,11 @@ forest = RandomHingeForest(in_channels=numFeatures, out_channels=numTrees, depth
 ```
 
 ## `sequential`
-Sequential initialization picks tree/fern decision thresholds on Uniform(-3,3), weights as Gaussian(0,1). The spitting features are instead assign sequentially in breadth-first-traversal fashion as:
+Sequential initialization picks tree/fern decision thresholds on Uniform(-3,3), weights as Gaussian(0,1). The spitting features are instead assigned sequentially in breadth-first-traversal fashion as:
 ```
 vertexFeatureIndex = vertexIndex mod numFeatures
 ```
-For example, you can use this to give each decision threshold a unique linear combination feature.
+For example, you can use this to give each vertex a unique linear combination feature for decisions.
 ```py
 import torch.nn as nn
 
