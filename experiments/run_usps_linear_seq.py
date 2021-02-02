@@ -22,7 +22,6 @@ import argparse
 import random
 import pickle
 import numpy as np
-import cv2
 import hashlib
 import torch
 import torch.nn as nn
@@ -35,77 +34,22 @@ class Net(nn.Module):
     def __init__(self, forestType, numTrees, depth):
         super(Net, self).__init__()
 
-        self.bn11 = nn.BatchNorm2d(40, affine=False)
-        self.conv11 = nn.Conv2d(3, 40, 3, padding=1, bias=False)
-        self.bn12 = nn.BatchNorm2d(40, affine=False)
-        self.conv12 = nn.Conv2d(40, 40, 3, padding=1, bias=False)
-        self.bn13 = nn.BatchNorm2d(40, affine=False)
-        self.conv13 = nn.Conv2d(40, 40, 3, padding=1, bias=False)
-    
-        self.pool = nn.MaxPool2d(2, 2)
-    
-        self.conv21 = nn.Conv2d(40, 40, 3, padding=1, bias=False)
-        self.bn21 = nn.BatchNorm2d(40, affine=False)
-        self.conv22 = nn.Conv2d(40, 40, 3, padding=1, bias=False)
-        self.bn22 = nn.BatchNorm2d(40, affine=False)
-        self.conv23 = nn.Conv2d(40, 40, 3, padding=1, bias=False)
-        self.bn23 = nn.BatchNorm2d(40, affine=False)
-    
-        self.conv31 = nn.Conv2d(40, 40, 3, padding=1, bias=False)
-        self.bn31 = nn.BatchNorm2d(40, affine=False)
-        self.conv32 = nn.Conv2d(40, 40, 3, padding=1, bias=False)
-        self.bn32 = nn.BatchNorm2d(40, affine=False)
-        self.conv33 = nn.Conv2d(40, 40, 3, padding=1, bias=False)
-        self.bn33 = nn.BatchNorm2d(40, affine=False)
-    
-        self.conv41 = nn.Conv2d(40, 40, 3, padding=1, bias=False)
-        self.bn41 = nn.BatchNorm2d(40, affine=False)
-        self.conv42 = nn.Conv2d(40, 40, 3, padding=1, bias=False)
-        self.bn42 = nn.BatchNorm2d(40, affine=False)
-        self.conv43 = nn.Conv2d(40, 40, 3, padding=1, bias=False)
-        self.bn43 = nn.BatchNorm2d(40, affine=False)
+        if forestType == RandomHingeForest:
+            numFeatures=numTrees*(2**depth - 1)
+        else:
+            numFeatures=numTrees*depth
 
-        #self.conv51 = nn.Conv2d(320, 640, 3, padding=1, bias=False)
-        #self.bn51 = nn.BatchNorm2d(640, affine=False)
-        #self.conv52 = nn.Conv2d(640, 640, 3, padding=1, bias=False)
-        #self.bn52 = nn.BatchNorm2d(640, affine=False)
-        #self.conv53 = nn.Conv2d(640, 640, 3, padding=1, bias=False)
-        #self.bn53 = nn.BatchNorm2d(640, affine=False)
+        numFeatures = int(0.2*numFeatures)
 
-        self.features = nn.Linear(in_features=40*2*2, out_features=100, bias=False)
-  
-        self.forestbn1 = nn.BatchNorm1d(100, affine=False)
-        self.forest1 = forestType(in_channels=100, out_channels=numTrees, depth=depth)
-        self.agg = nn.Linear(in_features=numTrees, out_features=10)
+        self.features = nn.Linear(in_features=256, out_features=numFeatures, bias=False)
+        self.bn = nn.BatchNorm1d(num_features=numFeatures, affine=False)
+        self.forest= forestType(in_channels=numFeatures, out_channels=numTrees, depth=depth, deterministic=True)
+        self.fc = nn.Linear(in_features=numTrees, out_features=10)
 
     def forward(self, x):
-        x = F.relu(self.bn11(self.conv11(x)))
-        x = F.relu(self.bn12(self.conv12(x)))
-        x = self.pool(F.relu(self.bn13(self.conv13(x))))
-        
-        x = F.relu(self.bn21(self.conv21(x)))
-        x = F.relu(self.bn22(self.conv22(x)))
-        x = self.pool(F.relu(self.bn23(self.conv23(x))))
-        
-        x = F.relu(self.bn31(self.conv31(x)))
-        x = F.relu(self.bn32(self.conv32(x)))
-        x = self.pool(F.relu(self.bn33(self.conv33(x))))
-        
-        x = F.relu(self.bn41(self.conv41(x)))
-        x = F.relu(self.bn42(self.conv42(x)))
-        x = self.pool(F.relu(self.bn43(self.conv43(x))))
-
-        #x = F.relu(self.bn51(self.conv51(x)))
-        #x = F.relu(self.bn52(self.conv52(x)))
-        #x = self.pool(F.relu(self.bn53(self.conv53(x))))
-
-        #x = x.view(-1, 640)
-        x = x.view(-1, 40*2*2)
         x = self.features(x)
-        x = self.forest1(self.forestbn1(x))
-        #x = x.sum(dim=1)
-        x = self.agg(x)
-        
+        x = self.forest(self.bn(x))
+        x = self.fc(x)
         return x
         
 def seed(seedStr):
@@ -122,60 +66,6 @@ def set_deterministic():
 
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
-
-def augment(data, target):
-    rotPos = np.empty_like(data)
-    rotNeg = np.empty_like(data)
-
-    Rpos = cv2.getRotationMatrix2D((16, 16), 4, 1)
-    Rneg = cv2.getRotationMatrix2D((16, 16), -4, 1)
-
-    for i in range(data.shape[0]):
-        tmp = np.transpose(data[i,:,:,:], (1, 2, 0))
-
-        tmpPos = cv2.warpAffine(tmp, Rpos, (32,32))
-        tmpNeg = cv2.warpAffine(tmp, Rneg, (32,32))
-
-        #cv2.imwrite("tmpPos.png", tmpPos)
-        #cv2.imwrite("tmpNeg.png", tmpNeg)
-        #exit(1)
-
-        rotPos[i,:,:,:] = np.transpose(tmpPos, (2, 0, 1))
-        rotNeg[i,:,:,:] = np.transpose(tmpNeg, (2, 0, 1))
-
-    augData = np.concatenate((data, rotPos, rotNeg))
-    augTarget = np.tile(target, 3)
-    #augTarget = np.concatenate((target, target, target))
-
-    # N x 3 x H x W
-    flippedData = np.flip(augData, axis=3)
-
-    #cv2.imwrite("flipped.png", np.transpose(flippedData[0,:,:,:], (1,2,0)))
-    #exit(1)
-
-    augData = np.concatenate((augData, flippedData))
-    #augTarget = np.concatenate((augTarget, augTarget))
-    augTarget = np.tile(augTarget, 2)
-
-    return augData, augTarget
-
-
-# See also:
-# https://discuss.pytorch.org/t/changing-the-weight-decay-on-bias-using-named-parameters/19132/4
-def add_weight_decay(model, weightDecay):
-    decay = []
-    noDecay = []
-
-    for name, param in model.named_parameters():
-        if not param.requires_grad:
-            continue
-
-        if name.endswith(".thresholds") or name.endswith(".ordinals"):
-            noDecay.append(param)
-        else:
-            decay.append(param)
-
-    return [{ "params": noDecay, "weight_decay": 0.0 }, { "params": decay, "weight_decay": weightDecay }]
 
 def balanced_shuffle(data, target, numTrain):
     if target.size <= 0 or numTrain < 0 or numTrain > target.size:
@@ -265,18 +155,15 @@ def batches(x, y, batchSize):
         yield torch.cat((xpart1, xpart2), dim=0).contiguous(), torch.cat((ypart1, ypart2)).contiguous()
 
 def train(snapshotroot, device, forestType, numTrees, depth):
-    xtrain, ytrain, xtest, ytest = datasets.load_cifar10()
+    xtrain, ytrain, xtest, ytest = datasets.load_usps()
 
-    ytrain = ytrain.astype(np.int32) # For shuffle
+    xtrain = np.reshape(xtrain, [-1, 256])
+    xtest = np.reshape(xtest, [-1, 256])
 
-    # This is the usual way...
-    #xtrain, ytrain, xval, yval = balanced_shuffle(xtrain, ytrain, 40000)
-    #xtrain, ytrain = augment(xtrain, ytrain)
-
-    # This works better (for test set)...
-    xtrain, ytrain = augment(xtrain, ytrain)
-    xtrain, ytrain, xval, yval = balanced_shuffle(xtrain, ytrain, 240000)
-
+    # XXX: Other papers use val = test for this data set
+    xval = xtest
+    yval = ytest
+    
     # Transfer this data to the device
     xtrain = torch.from_numpy(xtrain).type(torch.float32).to(device)
     ytrain = torch.from_numpy(ytrain).type(torch.long).to(device)
@@ -289,16 +176,9 @@ def train(snapshotroot, device, forestType, numTrees, depth):
     criterion = nn.CrossEntropyLoss().to(device)
     
     optimizer = optim.Adam(net.parameters(), lr = 0.001)
-    #optimizer = optim.Adam(add_weight_decay(net,5e-3), lr = 0.001)
-
-    # Count parameters
-    numParams = sum(params.numel() for params in net.parameters())
-    numTrainable = sum(params.numel() for params in net.parameters() if params.requires_grad)
-    print(f"There are {numParams} parameters total in this model ({numTrainable} are trainable)")
-
-    numEpochs=300
-    #batchSize=256
-    batchSize=200
+    
+    numEpochs=200
+    batchSize=23
     
     indices = [ i for i in range(xtrain.shape[0]) ]
     
@@ -309,9 +189,8 @@ def train(snapshotroot, device, forestType, numTrees, depth):
     valLosses = np.zeros([numEpochs])
     
     for epoch in range(numEpochs):
-        #t = time.time()
         random.shuffle(indices)
-
+        
         xtrain = xtrain[indices, :]
         ytrain = ytrain[indices]
 
@@ -327,7 +206,7 @@ def train(snapshotroot, device, forestType, numTrees, depth):
             loss.backward()
             
             optimizer.step()
-
+            
             runningLoss += loss
             count += 1         
             #print(f"elapsed = {time.time() - t}, count = {count}")
@@ -339,20 +218,19 @@ def train(snapshotroot, device, forestType, numTrees, depth):
 
         runningLoss = 0.0
         count = 0
-       
+
         with torch.no_grad():
             net.train(False)
-
-            for xbatch, ybatch in batches(xval, yval, 200):
-            #for xbatch, ybatch in zip([xval], [yval]):
+            #for xbatch, ybatch in batches(xval, yval, batchSize):
+            for xbatch, ybatch in zip([xval], [yval]):
                 outputs = net(xbatch)
-                lossTmp = criterion(outputs, ybatch)
+                loss = criterion(outputs, ybatch)
                 
-                runningLoss += lossTmp
+                runningLoss += loss
                 count += 1
                 
             net.train(True)
-                
+            
         valLoss = runningLoss / count
        
         if valLoss < bestLoss:
@@ -361,22 +239,20 @@ def train(snapshotroot, device, forestType, numTrees, depth):
         
         print(f"Info: Epoch = {epoch}, loss = {meanLoss}, validation loss = {valLoss}", flush=True)
         valLosses[epoch] = valLoss
-        #print(f"elapsed = {time.time() - t}")
         
     snapshotFile = os.path.join(snapshotroot, f"epoch_{bestEpoch}")
     
     net = Net(forestType, numTrees, depth)
     net.load_state_dict(torch.load(snapshotFile, map_location="cpu"))
     net = net.to(device)
-
+    
     totalCorrect = 0
     count = 0
-
+    
     with torch.no_grad():
         net.train(False)
-
-        for xbatch, ybatch in batches(xtest, ytest, 200):
-        #for xbatch, ybatch in zip([xtest], [ytest]):
+        #for xbatch, ybatch in batches(xtest, ytest, batchSize):        
+        for xbatch, ybatch in zip([xtest], [ytest]):
             outputs = net(xbatch)
             outputs = torch.argmax(outputs, dim=1)
             
@@ -385,20 +261,20 @@ def train(snapshotroot, device, forestType, numTrees, depth):
             totalCorrect += tmpCorrect
             count += xbatch.shape[0]
 
-        accuracy = float(totalCorrect) / float(count)
-        print(f"Info: Best epoch = {bestEpoch}, test accuracy = {accuracy}, misclassification rate = {1.0 - accuracy}", flush=True)
+    accuracy = float(totalCorrect) / float(count)
+    print(f"Info: Best epoch = {bestEpoch}, test accuracy = {accuracy}, misclassification rate = {1.0 - accuracy}", flush=True)
     
     return accuracy, valLosses
 
 def main(device, **kwargs):
-    snapshotroot = "cifar10_small"
+    snapshotroot = "usps_linear_seq"
     
     if not os.path.exists(snapshotroot):
         os.mkdir(snapshotroot)
         
     set_deterministic()
 
-    numExperiments = 10
+    numExperiments = 100
     
     for forestType in [ RandomHingeForest, RandomHingeFern ]:
     #for forestType in [ RandomHingeFern ]:
@@ -425,7 +301,7 @@ def main(device, **kwargs):
                     if not os.path.exists(snapshotdir):
                         os.makedirs(snapshotdir)
                         
-                    seed(f"cifar10{i}")
+                    seed(f"usps{i}")
                     
                     print(f"Training {snapshotdir} ...", flush=True)
                     
@@ -442,7 +318,7 @@ def main(device, **kwargs):
         
         
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="cifar10 experiment")
+    parser = argparse.ArgumentParser(description="usps experiment")
     parser.add_argument("--device", type=str, default="cpu", help="Torch device name to train/test (e.g. cuda:1)")
 
     args = parser.parse_args()
