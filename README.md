@@ -4,19 +4,23 @@ HingeTreeForTorch is a C++ PyTorch extension of RandomHingeForest.
 # Tested Environments
 HingeTreeForTorch has been built and tested in the following environments
 - Ubuntu 18.04
+  - PyTorch 1.7.0
   - Python 3.8.0
   - GCC 7.5
   - CUDA 10.1
   - CUDNN 7.6.3
 - CentOS 7.5
+  - PyTorch 1.7.1
   - Python 3.8.5
   - GCC 8.3.0 and 9.2.0
   - CUDA 10.2 and 11.0.3
   - CUDNN 7.6.5 and 8.0.3
 - OS X 10.15.7
+  - PyTorch 1.7.1
   - Python 3.8.2
   - XCode 12.4 (Clang 12.0.0)
 - Windows 10
+  - PyTorch 1.8.0 Nightly
   - Python 3.8.5
   - Visual Studio 2017 Community Edition
   - CUDA 10.2
