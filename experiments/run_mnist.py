@@ -167,7 +167,12 @@ def train(snapshotroot, device, forestType, numTrees, depth):
     
     optimizer = optim.Adam(net.parameters(), lr = 0.001)
     #optimizer = optim.Adam(net.parameters(), lr = 1e-3)
-    
+
+    # Count parameters
+    numParams = sum(params.numel() for params in net.parameters())
+    numTrainable = sum(params.numel() for params in net.parameters() if params.requires_grad)
+    print(f"There are {numParams} parameters total in this model ({numTrainable} are trainable)")
+
     numEpochs=200
     batchSize=50
    
@@ -272,8 +277,7 @@ def main(device, **kwargs):
         if forestType == RandomHingeFern:
             forestTypeName = "RandomHingeFern"
     
-        for numTrees in [ 100, 1000 ]:
-        #for numTrees in [ 100 ]:
+        for numTrees in [ 100 ]:
             for depth in [ 10 ]:
             #for depth in [ 10 ]:
                 print(f"Info: Running {forestTypeName}, numTrees = {numTrees}, depth = {depth} ...")

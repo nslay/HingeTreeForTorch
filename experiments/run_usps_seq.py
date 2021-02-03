@@ -175,7 +175,12 @@ def train(snapshotroot, device, forestType, numTrees, depth):
     criterion = nn.CrossEntropyLoss().to(device)
     
     optimizer = optim.Adam(net.parameters(), lr = 0.001)
-    
+
+    # Count parameters
+    numParams = sum(params.numel() for params in net.parameters())
+    numTrainable = sum(params.numel() for params in net.parameters() if params.requires_grad)
+    print(f"There are {numParams} parameters total in this model ({numTrainable} are trainable)")
+
     numEpochs=200
     batchSize=23
     

@@ -284,7 +284,12 @@ def train(snapshotroot, device, forestType, numTrees, depth):
     
     optimizer = optim.Adam(net.parameters(), lr = 0.001)
     #optimizer = optim.Adam(add_weight_decay(net,5e-3), lr = 0.001)
-    
+
+    # Count parameters
+    numParams = sum(params.numel() for params in net.parameters())
+    numTrainable = sum(params.numel() for params in net.parameters() if params.requires_grad)
+    print(f"There are {numParams} parameters total in this model ({numTrainable} are trainable)")
+
     numEpochs=300
     #batchSize=256
     batchSize=200
