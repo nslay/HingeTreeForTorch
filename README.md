@@ -152,9 +152,9 @@ If you see an error like this:
 
 >RuntimeError: Deterministic behavior was enabled with either `torch.use_deterministic_algorithms(True)` or `at::Context::setDeterministicAlgorithms(true)`, but this operation is not deterministic because it uses CuBLAS and you have CUDA >= 10.2. To enable deterministic behavior in this case, you must set an environment variable before running your PyTorch application: CUBLAS_WORKSPACE_CONFIG=:4096:8 or CUBLAS_WORKSPACE_CONFIG=:16:8. For more information, go to https://docs.nvidia.com/cuda/cublas/index.html#cublasApi_reproducibility
 
-Just set/export this variable
-Windows: `set CUBLAS_WORKSPACE_CONFIG=:4096:8`
-Unix-like: `export CUBLAS_WORKSPACE_CONFIG=:4096:8`
+Just set/export this variable as follows
+- Windows: `set CUBLAS_WORKSPACE_CONFIG=:4096:8`
+- Unix-like: `export CUBLAS_WORKSPACE_CONFIG=:4096:8`
 
 And then try again.
 
