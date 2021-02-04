@@ -1,1 +1,0 @@
-This data used to be hosted on UCI Machine Learning Repository, but it seems to have gone missing! I'm not sure where you can find this data now!
