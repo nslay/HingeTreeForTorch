@@ -541,24 +541,9 @@ def load_usps():
     if _usps_xtrain is not None:
         return _usps_xtrain.copy(), _usps_ytrain.copy(), _usps_xtest.copy(), _usps_ytest.copy()
 
-    path = _make_data_cache_dir("usps")
-
-    baseUrl = "https://raw.githubusercontent.com/nslay/bleak/master/Experiments/Data/usps/"
-    files = [ "zip.train.gz", "zip.test.gz", "zip.info", "README.txt" ]
-    hashes = [ "66ebf231ab51f2cf6ac1a892d0f98ccffee1079d7a5db638c1f11f366046ca16", "8dacc3c6e136af6c3488de9e5113a7daf140c8c2f1f0b61c54ee02f03f1a962f", None, None ]
-
-    for file, expectedHash in zip(files, hashes):
-        srcUrl = baseUrl + '/' + file
-        destFile = os.path.join(path, file)
-        
-        if not os.path.exists(destFile):
-            _download_file(srcUrl, destFile)
-            
-        tmpHash = _hash_file(destFile)
-        
-        if expectedHash is not None and expectedHash != tmpHash:
-            raise Exception(f"Error: Hash mismatch for '{destFile}'. Expected '{expectedHash}' but got '{tmpHash}'")
-
+    path = os.path.dirname(__file__)
+    path = os.path.join(path, "data", "usps")
+    
     trainFile = os.path.join(path, "zip.train.gz")
     testFile = os.path.join(path, "zip.test.gz")
 
