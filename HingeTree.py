@@ -136,7 +136,7 @@ class HingeTreeConv1d(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, outDataGrad):
-        if _is_deterministic() and inData.device.type != "cpu":
+        if _is_deterministic() and outDataGrad.device.type != "cpu":
             raise RuntimeError("No deterministic implementation of backpropagation for hinge tree convolution on GPUs.")
     
         inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation = ctx.saved_tensors
@@ -154,7 +154,7 @@ class HingeTreeConv2d(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, outDataGrad):
-        if _is_deterministic() and inData.device.type != "cpu":
+        if _is_deterministic() and outDataGrad.device.type != "cpu":
             raise RuntimeError("No deterministic implementation of backpropagation for hinge tree convolution on GPUs.")
     
         inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation = ctx.saved_tensors
@@ -172,7 +172,7 @@ class HingeTreeConv3d(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, outDataGrad):
-        if _is_deterministic() and inData.device.type != "cpu":
+        if _is_deterministic() and outDataGrad.device.type != "cpu":
             raise RuntimeError("No deterministic implementation of backpropagation for hinge tree convolution on GPUs.")
     
         inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation = ctx.saved_tensors
@@ -190,7 +190,7 @@ class HingeFernConv1d(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, outDataGrad):
-        if _is_deterministic() and inData.device.type != "cpu":
+        if _is_deterministic() and outDataGrad.device.type != "cpu":
             raise RuntimeError("No deterministic implementation of backpropagation for hinge fern convolution on GPUs.")
     
         inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation = ctx.saved_tensors
@@ -208,7 +208,7 @@ class HingeFernConv2d(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, outDataGrad):
-        if _is_deterministic() and inData.device.type != "cpu":
+        if _is_deterministic() and outDataGrad.device.type != "cpu":
             raise RuntimeError("No deterministic implementation of backpropagation for hinge fern convolution on GPUs.")
         
         inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation = ctx.saved_tensors
@@ -226,7 +226,7 @@ class HingeFernConv3d(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, outDataGrad):
-        if _is_deterministic() and inData.device.type != "cpu":
+        if _is_deterministic() and outDataGrad.device.type != "cpu":
             raise RuntimeError("No deterministic implementation of backpropagation for hinge fern convolution on GPUs.")
         
         inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation = ctx.saved_tensors
@@ -244,7 +244,7 @@ class HingeTrie(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, outDataGrad):
-        if _is_deterministic() and inData.device.type != "cpu":
+        if _is_deterministic() and outDataGrad.device.type != "cpu":
             raise RuntimeError("No deterministic implementation of backpropagation of hinge trie on GPUs.")
     
         inData, inThresholds, inOrdinals, inWeights = ctx.saved_tensors
