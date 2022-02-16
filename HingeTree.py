@@ -21,6 +21,14 @@ import torch.nn as nn
 import torch.autograd
 import hingetree_cpp
 
+def _is_deterministic():
+    if hasattr(torch, "are_deterministic_algorithms_enabled"):
+        return torch.are_deterministic_algorithms_enabled()
+    elif hasattr(torch, "is_deterministic"):
+        return torch.is_deterministic()
+
+    raise RuntimeError("Unable to query torch deterministic mode.")
+
 class HingeTree(torch.autograd.Function):
     @staticmethod
     def forward(ctx, inData, inThresholds, inOrdinals, inWeights):
@@ -32,7 +40,10 @@ class HingeTree(torch.autograd.Function):
     def backward(ctx, outDataGrad):
         inData, inThresholds, inOrdinals, inWeights = ctx.saved_tensors
 
-        inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad = hingetree_cpp.tree_backward(inData, ctx.needs_input_grad[0], inThresholds, ctx.needs_input_grad[1], inOrdinals, ctx.needs_input_grad[2], inWeights, ctx.needs_input_grad[3], outDataGrad.contiguous())
+        if _is_deterministic():
+            inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad = hingetree_cpp.tree_backward_deterministic(inData, ctx.needs_input_grad[0], inThresholds, ctx.needs_input_grad[1], inOrdinals, ctx.needs_input_grad[2], inWeights, ctx.needs_input_grad[3], outDataGrad.contiguous())
+        else:
+            inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad = hingetree_cpp.tree_backward(inData, ctx.needs_input_grad[0], inThresholds, ctx.needs_input_grad[1], inOrdinals, ctx.needs_input_grad[2], inWeights, ctx.needs_input_grad[3], outDataGrad.contiguous())
 
         return inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad
 
@@ -49,21 +60,24 @@ class HingeTree(torch.autograd.Function):
         return hingetree_cpp.tree_reachability(inData, inThresholds, inOrdinals, inWeights)
 
     @staticmethod
-    def speedtest(inData):
-        return hingetree_cpp.tree_speedtest(inData, False)
+    def leafmap(inData, inThresholds, inOrdinals, inWeights):
+        return hingetree_cpp.tree_leafmap(inData, inThresholds, inOrdinals, inWeights)
 
-class DeterministicHingeTree(HingeTree):
     @staticmethod
-    def backward(ctx, outDataGrad):
-        inData, inThresholds, inOrdinals, inWeights = ctx.saved_tensors
-
-        inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad = hingetree_cpp.tree_backward_deterministic(inData, ctx.needs_input_grad[0], inThresholds, ctx.needs_input_grad[1], inOrdinals, ctx.needs_input_grad[2], inWeights, ctx.needs_input_grad[3], outDataGrad.contiguous())
-
-        return inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad
+    def marginmap(inData, inThresholds, inOrdinals, inWeights):
+        return hingetree_cpp.tree_marginmap(inData, inThresholds, inOrdinals, inWeights)
 
     @staticmethod
     def speedtest(inData):
-        return hingetree_cpp.tree_speedtest(inData, True)
+        return hingetree_cpp.tree_speedtest(inData, _is_deterministic())
+
+    @staticmethod
+    def init_medians(inData, inThresholds, inOrdinals, inWeights):
+        return hingetree_cpp.tree_init_medians(inData, inThresholds, inOrdinals, inWeights)
+
+    @staticmethod
+    def init_greedy(inData, inLabels, inThresholds, inOrdinals, inWeights):
+        return hingetree_cpp.tree_init_greedy(inData, inLabels, inThresholds, inOrdinals, inWeights)
 
 class HingeFern(torch.autograd.Function):
     @staticmethod
@@ -76,7 +90,10 @@ class HingeFern(torch.autograd.Function):
     def backward(ctx, outDataGrad):
         inData, inThresholds, inOrdinals, inWeights = ctx.saved_tensors
 
-        inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad = hingetree_cpp.fern_backward(inData, ctx.needs_input_grad[0], inThresholds, ctx.needs_input_grad[1], inOrdinals, ctx.needs_input_grad[2], inWeights, ctx.needs_input_grad[3], outDataGrad.contiguous())
+        if _is_deterministic():
+            inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad = hingetree_cpp.fern_backward_deterministic(inData, ctx.needs_input_grad[0], inThresholds, ctx.needs_input_grad[1], inOrdinals, ctx.needs_input_grad[2], inWeights, ctx.needs_input_grad[3], outDataGrad.contiguous())
+        else:
+            inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad = hingetree_cpp.fern_backward(inData, ctx.needs_input_grad[0], inThresholds, ctx.needs_input_grad[1], inOrdinals, ctx.needs_input_grad[2], inWeights, ctx.needs_input_grad[3], outDataGrad.contiguous())
 
         return inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad
      
@@ -93,19 +110,150 @@ class HingeFern(torch.autograd.Function):
         return hingetree_cpp.fern_reachability(inData, inThresholds, inOrdinals, inWeights)
 
     @staticmethod
-    def speedtest(inData):
-        return hingetree_cpp.fern_speedtest(inData, False)
+    def leafmap(inData, inThresholds, inOrdinals, inWeights):
+        return hingetree_cpp.fern_leafmap(inData, inThresholds, inOrdinals, inWeights)
 
-class DeterministicHingeFern(HingeFern):
+    @staticmethod
+    def marginmap(inData, inThresholds, inOrdinals, inWeights):
+        return hingetree_cpp.fern_marginmap(inData, inThresholds, inOrdinals, inWeights)
+
+    @staticmethod
+    def speedtest(inData):
+        return hingetree_cpp.fern_speedtest(inData, _is_deterministic())
+
+    @staticmethod
+    def init_medians(inData, inThresholds, inOrdinals, inWeights):
+        return hingetree_cpp.fern_init_medians(inData, inThresholds, inOrdinals, inWeights)
+
+# Convolution operations below
+
+class HingeTreeConv1d(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation):
+        ctx.save_for_backward(inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation)
+
+        return hingetree_cpp.tree_conv1d_forward(inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation)
+
     @staticmethod
     def backward(ctx, outDataGrad):
+        if _is_deterministic() and inData.device.type != "cpu":
+            raise RuntimeError("No deterministic implementation of backpropagation for hinge tree convolution on GPUs.")
+    
+        inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation = ctx.saved_tensors
+
+        inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad = hingetree_cpp.tree_conv1d_backward(inData, ctx.needs_input_grad[0], inThresholds, ctx.needs_input_grad[1], inOrdinals, ctx.needs_input_grad[2], inWeights, ctx.needs_input_grad[3], outDataGrad.contiguous(), kernelSize, stride, padding, dilation)
+
+        return inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad, None, None, None, None
+
+class HingeTreeConv2d(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation):
+        ctx.save_for_backward(inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation)
+
+        return hingetree_cpp.tree_conv2d_forward(inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation)
+
+    @staticmethod
+    def backward(ctx, outDataGrad):
+        if _is_deterministic() and inData.device.type != "cpu":
+            raise RuntimeError("No deterministic implementation of backpropagation for hinge tree convolution on GPUs.")
+    
+        inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation = ctx.saved_tensors
+
+        inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad = hingetree_cpp.tree_conv2d_backward(inData, ctx.needs_input_grad[0], inThresholds, ctx.needs_input_grad[1], inOrdinals, ctx.needs_input_grad[2], inWeights, ctx.needs_input_grad[3], outDataGrad.contiguous(), kernelSize, stride, padding, dilation)
+
+        return inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad, None, None, None, None
+
+class HingeTreeConv3d(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation):
+        ctx.save_for_backward(inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation)
+
+        return hingetree_cpp.tree_conv3d_forward(inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation)
+
+    @staticmethod
+    def backward(ctx, outDataGrad):
+        if _is_deterministic() and inData.device.type != "cpu":
+            raise RuntimeError("No deterministic implementation of backpropagation for hinge tree convolution on GPUs.")
+    
+        inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation = ctx.saved_tensors
+
+        inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad = hingetree_cpp.tree_conv3d_backward(inData, ctx.needs_input_grad[0], inThresholds, ctx.needs_input_grad[1], inOrdinals, ctx.needs_input_grad[2], inWeights, ctx.needs_input_grad[3], outDataGrad.contiguous(), kernelSize, stride, padding, dilation)
+
+        return inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad, None, None, None, None
+
+class HingeFernConv1d(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation):
+        ctx.save_for_backward(inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation)
+
+        return hingetree_cpp.fern_conv1d_forward(inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation)
+
+    @staticmethod
+    def backward(ctx, outDataGrad):
+        if _is_deterministic() and inData.device.type != "cpu":
+            raise RuntimeError("No deterministic implementation of backpropagation for hinge fern convolution on GPUs.")
+    
+        inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation = ctx.saved_tensors
+
+        inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad = hingetree_cpp.fern_conv1d_backward(inData, ctx.needs_input_grad[0], inThresholds, ctx.needs_input_grad[1], inOrdinals, ctx.needs_input_grad[2], inWeights, ctx.needs_input_grad[3], outDataGrad.contiguous(), kernelSize, stride, padding, dilation)
+
+        return inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad, None, None, None, None
+
+class HingeFernConv2d(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation):
+        ctx.save_for_backward(inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation)
+
+        return hingetree_cpp.fern_conv2d_forward(inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation)
+
+    @staticmethod
+    def backward(ctx, outDataGrad):
+        if _is_deterministic() and inData.device.type != "cpu":
+            raise RuntimeError("No deterministic implementation of backpropagation for hinge fern convolution on GPUs.")
+        
+        inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation = ctx.saved_tensors
+        
+        inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad = hingetree_cpp.fern_conv2d_backward(inData, ctx.needs_input_grad[0], inThresholds, ctx.needs_input_grad[1], inOrdinals, ctx.needs_input_grad[2], inWeights, ctx.needs_input_grad[3], outDataGrad.contiguous(), kernelSize, stride, padding, dilation)
+
+        return inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad, None, None, None, None
+
+class HingeFernConv3d(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation):
+        ctx.save_for_backward(inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation)
+
+        return hingetree_cpp.fern_conv3d_forward(inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation)
+
+    @staticmethod
+    def backward(ctx, outDataGrad):
+        if _is_deterministic() and inData.device.type != "cpu":
+            raise RuntimeError("No deterministic implementation of backpropagation for hinge fern convolution on GPUs.")
+        
+        inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation = ctx.saved_tensors
+        
+        inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad = hingetree_cpp.fern_conv3d_backward(inData, ctx.needs_input_grad[0], inThresholds, ctx.needs_input_grad[1], inOrdinals, ctx.needs_input_grad[2], inWeights, ctx.needs_input_grad[3], outDataGrad.contiguous(), kernelSize, stride, padding, dilation)
+
+        return inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad, None, None, None, None
+
+class HingeTrie(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, inData, inThresholds, inOrdinals, inWeights):
+        ctx.save_for_backward(inData, inThresholds, inOrdinals, inWeights)
+
+        return hingetree_cpp.trie_forward(inData, inThresholds, inOrdinals, inWeights)
+
+    @staticmethod
+    def backward(ctx, outDataGrad):
+        if _is_deterministic() and inData.device.type != "cpu":
+            raise RuntimeError("No deterministic implementation of backpropagation of hinge trie on GPUs.")
+    
         inData, inThresholds, inOrdinals, inWeights = ctx.saved_tensors
 
-        inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad = hingetree_cpp.fern_backward_deterministic(inData, ctx.needs_input_grad[0], inThresholds, ctx.needs_input_grad[1], inOrdinals, ctx.needs_input_grad[2], inWeights, ctx.needs_input_grad[3], outDataGrad.contiguous())
+        inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad = hingetree_cpp.trie_backward(inData, ctx.needs_input_grad[0], inThresholds, ctx.needs_input_grad[1], inOrdinals, ctx.needs_input_grad[2], inWeights, ctx.needs_input_grad[3], outDataGrad.contiguous())
 
         return inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad
 
     @staticmethod
-    def speedtest(inData):
-        return hingetree_cpp.fern_speedtest(inData, True)
+    def init_medians(inData, inThresholds, inOrdinals, inWeights):
+        return hingetree_cpp.trie_init_medians(inData, inThresholds, inOrdinals, inWeights)
 

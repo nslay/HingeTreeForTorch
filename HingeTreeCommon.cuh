@@ -25,8 +25,8 @@
 
 #pragma once
 
-#ifndef HINGETREECOMMON_CUH
-#define HINGETREECOMMON_CUH
+#ifndef BLEAK_HINGETREECOMMON_CUH
+#define BLEAK_HINGETREECOMMON_CUH
 
 #include "HingeTreeCommon.h"
 
@@ -53,25 +53,25 @@ public:
 
   typedef KeyMarginTuple KeyMarginTupleType;
 
-  __device__ static int GetThresholdCount(int iTreeDepth) { return iTreeDepth; } // Internal tree vertices
-  __device__ static int GetLeafCount(int iTreeDepth) { return 1 << iTreeDepth; }
+  __device__ static int64_t GetThresholdCount(int64_t i64TreeDepth) { return i64TreeDepth; } // Internal tree vertices
+  __device__ static int64_t GetLeafCount(int64_t i64TreeDepth) { return ((int64_t)1) << i64TreeDepth; }
 
   // Returns leaf key, signed margin and threshold/ordinal index
-  __device__ static KeyMarginTupleType ComputeKeyAndSignedMargin(const RealType *p_data, const RealType *p_thresholds, const RealType *p_ordinals, int iTreeDepth, int iStride = 1) {
+  __device__ static KeyMarginTupleType ComputeKeyAndSignedMargin(const RealType *p_data, const RealType *p_thresholds, const RealType *p_ordinals, int64_t i64TreeDepth, int64_t i64Stride = 1) {
     KeyType leafKey = KeyType();
-    RealType minMargin = p_data[iStride*(int)p_ordinals[0]] - p_thresholds[0];
+    RealType minMargin = p_data[i64Stride*(int64_t)p_ordinals[0]] - p_thresholds[0];
     KeyType minFernIndex = 0;
 
-    for (int i = 0; i < iTreeDepth; ++i) {
-      const int j = (int)p_ordinals[i];
-      const RealType margin = p_data[iStride*j] - p_thresholds[i];
+    for (int64_t i = 0; i < i64TreeDepth; ++i) {
+      const int64_t j = (int64_t)p_ordinals[i];
+      const RealType margin = p_data[i64Stride*j] - p_thresholds[i];
       const KeyType bit = (margin > RealType(0));
 
       leafKey |= (bit << i);
 
       if (std::abs(margin) < std::abs(minMargin)) {
         minMargin = margin;
-        minFernIndex = i;
+        minFernIndex = KeyType(i);
       }
     }
 
@@ -97,19 +97,19 @@ public:
 
   typedef KeyMarginTuple KeyMarginTupleType;
 
-  __device__ static int GetThresholdCount(int iTreeDepth) { return (1 << iTreeDepth) - 1; } // Internal tree vertices
-  __device__ static int GetLeafCount(int iTreeDepth) { return 1 << iTreeDepth; }
+  __device__ static int64_t GetThresholdCount(int64_t i64TreeDepth) { return (((int64_t)1) << i64TreeDepth) - 1; } // Internal tree vertices
+  __device__ static int64_t GetLeafCount(int64_t i64TreeDepth) { return ((int64_t)1) << i64TreeDepth; }
 
   // Returns leaf key, signed margin and threshold/ordinal index
-  __device__ static KeyMarginTupleType ComputeKeyAndSignedMargin(const RealType *p_data, const RealType *p_thresholds, const RealType *p_ordinals, int iTreeDepth, int iStride = 1) {
+  __device__ static KeyMarginTupleType ComputeKeyAndSignedMargin(const RealType *p_data, const RealType *p_thresholds, const RealType *p_ordinals, int64_t i64TreeDepth, int64_t i64Stride = 1) {
     KeyType leafKey = KeyType();
     KeyType treeIndex = KeyType();
-    RealType minMargin = p_data[iStride * (int)p_ordinals[0]] - p_thresholds[0];
+    RealType minMargin = p_data[i64Stride * (int64_t)p_ordinals[0]] - p_thresholds[0];
     KeyType minTreeIndex = KeyType();
 
-    for (int i = 0; i < iTreeDepth; ++i) {
-      const int j = (int)p_ordinals[treeIndex];
-      const RealType margin = p_data[j*iStride] - p_thresholds[treeIndex];
+    for (int64_t i = 0; i < i64TreeDepth; ++i) {
+      const int64_t j = (int64_t)p_ordinals[treeIndex];
+      const RealType margin = p_data[j*i64Stride] - p_thresholds[treeIndex];
       const KeyType bit = (margin > RealType(0));
 
       if (std::abs(margin) < std::abs(minMargin)) {
@@ -127,4 +127,4 @@ public:
 
 } // end namespace bleak
 
-#endif // !HINGETREECOMMON_CUH
+#endif // BLEAK_HINGETREECOMMON_CUH

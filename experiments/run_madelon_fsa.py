@@ -28,6 +28,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 from LinearFSA import LinearFSA
 from RandomHingeForest import RandomHingeForest, RandomHingeFern
+from deterministic import set_deterministic
 import datasets
 
 class Net(nn.Module):
@@ -59,13 +60,6 @@ def seed(seedStr):
     #torch.random.manual_seed(seed)
     #torch.cuda.random.manual_seed(seed)
     torch.manual_seed(seed)
-
-def set_deterministic():
-    if hasattr(torch, "set_deterministic"):
-        torch.set_deterministic(True)
-
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
    
 def balanced_shuffle(data, target, numTrain):
     if target.size <= 0 or numTrain < 0 or numTrain > target.size:
@@ -291,7 +285,7 @@ def main(device, **kwargs):
     if not os.path.exists(snapshotroot):
         os.mkdir(snapshotroot)
 
-    set_deterministic()
+    set_deterministic(True)
     
     numExperiments = 100
     

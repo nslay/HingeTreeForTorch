@@ -68,19 +68,20 @@ fern = RandomHingeFern(in_channels=numFeatures, out_channels=numTrees, depth=fer
 x = torch.rand([32, numFeatures])
 y = forest(x)
 ```
-By default, the `RandomHingeForest` and `RandomHingeFern` take in \[batchSize,numFeatures,d0,d1,...\] tensors and produce \[batchSize,numTrees,d0,d1...\] tensors. You can change the number of predictions per leaf with `extra_outputs=numOutputs`
+By default, the `RandomHingeForest` and `RandomHingeFern` take in \[batchSize,numFeatures,d0,d1,...\] tensors and produce \[batchSize,numTrees,d0,d1...\] tensors. You can change the shape of predictions per leaf with `extra_outputs=outputShape`. For example
 ```py
-forest = RandomHingeForest(in_channels=numFeatures, out_channels=numTrees, depth=treeDepth, extra_outputs=numOutputs) # Predict numOutputs values per tree
+forest = RandomHingeForest(in_channels=numFeatures, out_channels=numTrees, depth=treeDepth, extra_outputs=10) # Predict 10 values per tree
 ```
-In which case the `RandomHingeForest` and `RandomHingeFern` take in \[batchSize,numFeatures,d0,d1,...\] tensors and produce \[batchSize,numTrees,d0,d1...,numOutputs\] tensors.
+or
+```py
+forest = RandomHingeForest(in_channels=numFeatures, out_channels=numTrees, depth=treeDepth, extra_outputs=[8,8]) # Predict 8x8 values per tree
+```
+In which case the `RandomHingeForest` and `RandomHingeFern` take in \[batchSize,numFeatures,d0,d1,...\] tensors and produce \[batchSize,numTrees,d0,d1...,outputShape\] tensors.
 
 # Reproducibility
-Forward passes are always deterministic on both the CPU and GPU. Backward passes are always deterministic on the CPU and, **by default**, deterministic on the GPU. The deterministic GPU backward pass can be very slow!
+Deterministic computation is now controlled by [PyTorch](https://pytorch.org/docs/stable/notes/randomness.html#avoiding-nondeterministic-algorithms). Forward passes are always deterministic on both the CPU and GPU. Backward passes are always deterministic on the CPU. The deterministic GPU backward pass can be very slow!
 
-You can use `deterministic=False` to ensure gradient calculations on the GPU are calculated as fast as possible, though the result is not deterministic.
-```py
-forest = RandomHingeForest(in_channels=numFeatures, out_channels=numTrees, depth=treeDepth, deterministic=False)
-```
+Some undocumented interfaces lack deterministic algorithms. These interfaces will raise `RuntimeError` exceptions when deterministic algorithms are not available. Both `RandomHingeForest` and `RandomHingeFern` support deterministic computation.
 
 # Initialization
 `RandomHingeForest` and `RandomHingeFern` support two types of initialization: random, sequential.

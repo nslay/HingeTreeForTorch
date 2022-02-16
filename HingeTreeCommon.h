@@ -25,8 +25,8 @@
 
 #pragma once
 
-#ifndef HINGETREECOMMON_H
-#define HINGETREECOMMON_H
+#ifndef BLEAK_HINGETREECOMMON_H
+#define BLEAK_HINGETREECOMMON_H
 
 #include <cmath>
 #include <cstdint>
@@ -48,42 +48,42 @@ public:
 
   static_assert(std::is_integral<KeyType>::value && std::is_unsigned<KeyType>::value, "Unsigned integral type is required for leaf keys.");
 
-  static constexpr int GetMaxDepth() { return CHAR_BIT*sizeof(KeyType) - 1; }
+  static constexpr int64_t GetMaxDepth() { return CHAR_BIT*sizeof(KeyType) - 1; }
 
   // -1 if an error (not power of 2)
   // This can be determined from threshold/ordinals size though!
-  static int ComputeDepth(int iLeafCount) {
-    if (iLeafCount <= 0 || (iLeafCount & (iLeafCount-1)) != 0)
+  static int64_t ComputeDepth(int64_t i64LeafCount) {
+    if (i64LeafCount <= 0 || (i64LeafCount & (i64LeafCount-1)) != 0)
       return -1; // Not a power of 2
 
-    int iTreeDepth = 0;
+    int64_t i64TreeDepth = 0;
 
-    for ( ; iLeafCount != 0; iLeafCount >>= 1)
-      ++iTreeDepth;
+    for ( ; i64LeafCount != 0; i64LeafCount >>= 1)
+      ++i64TreeDepth;
 
-    return iTreeDepth-1;
+    return i64TreeDepth-1;
   }
 
   // For sanity checks!
-  static int GetThresholdCount(int iTreeDepth) { return iTreeDepth; } // Internal tree vertices
-  static int GetLeafCount(int iTreeDepth) { return 1 << iTreeDepth; }
+  static int64_t GetThresholdCount(int64_t i64TreeDepth) { return i64TreeDepth; } // Internal tree vertices
+  static int64_t GetLeafCount(int64_t i64TreeDepth) { return ((int64_t)1) << i64TreeDepth; }
 
   // Returns leaf key, signed margin and threshold/ordinal index
-  static KeyMarginTupleType ComputeKeyAndSignedMargin(const RealType *p_data, const RealType *p_thresholds, const RealType *p_ordinals, int iTreeDepth, int iStride = 1) {
+  static KeyMarginTupleType ComputeKeyAndSignedMargin(const RealType *p_data, const RealType *p_thresholds, const RealType *p_ordinals, int64_t i64TreeDepth, int64_t i64Stride = 1) {
     KeyType leafKey = KeyType();
-    RealType minMargin = p_data[iStride*(int)p_ordinals[0]] - p_thresholds[0];
+    RealType minMargin = p_data[i64Stride*(int64_t)p_ordinals[0]] - p_thresholds[0];
     KeyType minFernIndex = 0;
 
-    for (int i = 0; i < iTreeDepth; ++i) {
-      const int j = (int)p_ordinals[i];
-      const RealType margin = p_data[iStride*j] - p_thresholds[i];
+    for (int64_t i = 0; i < i64TreeDepth; ++i) {
+      const int64_t j = (int64_t)p_ordinals[i];
+      const RealType margin = p_data[i64Stride*j] - p_thresholds[i];
       const KeyType bit = (margin > RealType(0));
 
       leafKey |= (bit << i);
 
       if (std::abs(margin) < std::abs(minMargin)) {
         minMargin = margin;
-        minFernIndex = i;
+        minFernIndex = KeyType(i);
       }
     }
 
@@ -91,10 +91,10 @@ public:
   }
 
   // Check if thresholds are logically consistent
-  static bool CheckThresholds(const RealType * /*p_thresholds*/, const RealType * /*p_ordinals*/, int /*iTreeDepth*/) { return true; } // Nothing to do since order of decisions does not matter
+  static bool CheckThresholds(const RealType * /*p_thresholds*/, const RealType * /*p_ordinals*/, int64_t /*i64TreeDepth*/) { return true; } // Nothing to do since order of decisions does not matter
 
   // Checks and fixes logical consistency of thresholds... returns true if changes were made
-  static bool FixThresholds(RealType * /*p_thresholds*/, const RealType * /*p_ordinals*/, int /*iTreeDepth*/) { return false; } // Nothing to do since order of decisions does not matter
+  static bool FixThresholds(RealType * /*p_thresholds*/, const RealType * /*p_ordinals*/, int64_t /*i64TreeDepth*/) { return false; } // Nothing to do since order of decisions does not matter
 };
 
 template<typename RealTypeT, typename KeyTypeT = uint32_t>
@@ -106,34 +106,34 @@ public:
 
   static_assert(std::is_integral<KeyType>::value && std::is_unsigned<KeyType>::value, "Unsigned integral type is required for leaf keys.");
 
-  static constexpr int GetMaxDepth() { return CHAR_BIT*sizeof(KeyType) - 1; }
+  static constexpr int64_t GetMaxDepth() { return CHAR_BIT*sizeof(KeyType) - 1; }
 
   // -1 if an error (not power of 2)
-  static int ComputeDepth(int iLeafCount) {
-    if (iLeafCount <= 0 || (iLeafCount & (iLeafCount-1)) != 0)
+  static int64_t ComputeDepth(int64_t i64LeafCount) {
+    if (i64LeafCount <= 0 || (i64LeafCount & (i64LeafCount-1)) != 0)
       return -1; // Not a power of 2
 
-    int iTreeDepth = 0;
+    int64_t i64TreeDepth = 0;
 
-    for ( ; iLeafCount != 0; iLeafCount >>= 1)
-      ++iTreeDepth;
+    for ( ; i64LeafCount != 0; i64LeafCount >>= 1)
+      ++i64TreeDepth;
 
-    return iTreeDepth-1;
+    return i64TreeDepth-1;
   }
 
-  static int GetThresholdCount(int iTreeDepth) { return (1 << iTreeDepth) - 1; } // Internal tree vertices
-  static int GetLeafCount(int iTreeDepth) { return 1 << iTreeDepth; }
+  static int64_t GetThresholdCount(int64_t i64TreeDepth) { return (((int64_t)1) << i64TreeDepth) - 1; } // Internal tree vertices
+  static int64_t GetLeafCount(int64_t i64TreeDepth) { return ((int64_t)1) << i64TreeDepth; }
 
   // Returns leaf key, signed margin and threshold/ordinal index
-  static KeyMarginTupleType ComputeKeyAndSignedMargin(const RealType *p_data, const RealType *p_thresholds, const RealType *p_ordinals, int iTreeDepth, int iStride = 1) {
+  static KeyMarginTupleType ComputeKeyAndSignedMargin(const RealType *p_data, const RealType *p_thresholds, const RealType *p_ordinals, int64_t i64TreeDepth, int64_t i64Stride = 1) {
     KeyType leafKey = KeyType();
     KeyType treeIndex = KeyType();
-    RealType minMargin = p_data[iStride * (int)p_ordinals[0]] - p_thresholds[0];
+    RealType minMargin = p_data[i64Stride * (int64_t)p_ordinals[0]] - p_thresholds[0];
     KeyType minTreeIndex = KeyType();
 
-    for (int i = 0; i < iTreeDepth; ++i) {
-      const int j = (int)p_ordinals[treeIndex];
-      const RealType margin = p_data[j*iStride] - p_thresholds[treeIndex];
+    for (int64_t i = 0; i < i64TreeDepth; ++i) {
+      const int64_t j = (int64_t)p_ordinals[treeIndex];
+      const RealType margin = p_data[j*i64Stride] - p_thresholds[treeIndex];
       const KeyType bit = (margin > RealType(0));
 
       if (std::abs(margin) < std::abs(minMargin)) {
@@ -148,32 +148,32 @@ public:
     return std::make_tuple(leafKey, minMargin, minTreeIndex);
   }
 
-  static bool CheckThresholds(const RealType *p_thresholds, const RealType *p_ordinals, int iTreeDepth) {
-    const int iThresholdCount = GetThresholdCount(iTreeDepth);
+  static bool CheckThresholds(const RealType *p_thresholds, const RealType *p_ordinals, int64_t i64TreeDepth) {
+    const int64_t i64ThresholdCount = GetThresholdCount(i64TreeDepth);
 
-    for (int i = iThresholdCount-1; i > 0; --i) {
-      const int iOrdinal = (int)p_ordinals[i];
-      int iNode = i;
+    for (int64_t i = i64ThresholdCount-1; i > 0; --i) {
+      const int64_t i64Ordinal = (int64_t)p_ordinals[i];
+      int64_t i64Node = i;
 
-      while (iNode > 0) {
-        const int iParent = (iNode-1)/2;
-        const bool bCameFromRight = (2*iParent+2 == iNode);
-        const int iParentOrdinal = (int)p_ordinals[iParent];
+      while (i64Node > 0) {
+        const int64_t i64Parent = (i64Node-1)/2;
+        const bool bCameFromRight = (2*i64Parent+2 == i64Node);
+        const int64_t i64ParentOrdinal = (int64_t)p_ordinals[i64Parent];
 
-        if (iOrdinal == iParentOrdinal) {
+        if (i64Ordinal == i64ParentOrdinal) {
           if (bCameFromRight) {
             // Node i's threshold shall be larger than this parent's threshold
-            if (p_thresholds[i] < p_thresholds[iParent])
+            if (p_thresholds[i] < p_thresholds[i64Parent])
               return false;
           }
           else {
             // Node i's threshold shall be smaller than this parent's threshold
-            if (p_thresholds[i] > p_thresholds[iParent])
+            if (p_thresholds[i] > p_thresholds[i64Parent])
               return false;
           }
         }
 
-        iNode = iParent;
+        i64Node = i64Parent;
       }
     }
 
@@ -181,32 +181,32 @@ public:
   }
 
   // Checks and fixes logical consistency of thresholds
-  static bool FixThresholds(RealType *p_thresholds, const RealType *p_ordinals, int iTreeDepth) {
+  static bool FixThresholds(RealType *p_thresholds, const RealType *p_ordinals, int64_t i64TreeDepth) {
     //constexpr RealType small = RealType(1e-1);
-    const int iThresholdCount = GetThresholdCount(iTreeDepth);
+    const int64_t i64ThresholdCount = GetThresholdCount(i64TreeDepth);
 
     bool bChangesMade = false;
 
-    for (int i = 1; i < iThresholdCount; ++i) {
-      const int iOrdinal = (int)p_ordinals[i];
-      int iNode = i;
+    for (int64_t i = 1; i < i64ThresholdCount; ++i) {
+      const int64_t i64Ordinal = (int64_t)p_ordinals[i];
+      int64_t i64Node = i;
 
       RealType minThreshold = -std::numeric_limits<RealType>::infinity();
       RealType maxThreshold = std::numeric_limits<RealType>::infinity();
 
-      while (iNode > 0) {
-        const int iParent = (iNode-1)/2;
-        const bool bCameFromRight = (2*iParent+2 == iNode);
-        const int iParentOrdinal = (int)p_ordinals[iParent];
+      while (i64Node > 0) {
+        const int64_t i64Parent = (i64Node-1)/2;
+        const bool bCameFromRight = (2*i64Parent+2 == i64Node);
+        const int64_t i64ParentOrdinal = (int64_t)p_ordinals[i64Parent];
 
-        if (iOrdinal == iParentOrdinal) {
+        if (i64Ordinal == i64ParentOrdinal) {
           if (bCameFromRight)
-            minThreshold = std::max(minThreshold, p_thresholds[iParent]);
+            minThreshold = std::max(minThreshold, p_thresholds[i64Parent]);
           else
-            maxThreshold = std::min(maxThreshold, p_thresholds[iParent]);
+            maxThreshold = std::min(maxThreshold, p_thresholds[i64Parent]);
         }
 
-        iNode = iParent;
+        i64Node = i64Parent;
       }
 
       if (p_thresholds[i] < minThreshold || p_thresholds[i] > maxThreshold) {
@@ -229,4 +229,4 @@ public:
 
 } // end namespace bleak
 
-#endif // !HINGETREECOMMON_H
+#endif // !BLEAK_HINGETREECOMMON_H

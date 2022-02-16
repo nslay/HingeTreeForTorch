@@ -31,7 +31,7 @@ def seed(seedStr):
     np.random.seed(seed) # Bad way to do this!
     return seed
 
-def set_deterministic():
+def set_deterministic(mode):
     pass
     
 def balanced_shuffle(data, target, numTrain):
@@ -130,7 +130,7 @@ def main(device, **kwargs):
     if not os.path.exists(snapshotroot):
         os.mkdir(snapshotroot)
 
-    set_deterministic()
+    set_deterministic(True)
         
     numExperiments = 100
     
