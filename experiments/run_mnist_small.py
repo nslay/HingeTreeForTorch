@@ -39,7 +39,7 @@ class Net(nn.Module):
         self.featuresbn2 = nn.BatchNorm2d(num_features=40, affine=False)
         self.features3 = nn.Conv2d(in_channels=40, out_channels=40, kernel_size=5, stride=1, padding=2, bias=False)
         self.bn = nn.BatchNorm1d(num_features=40*4*4, affine=False)
-        self.forest= forestType(in_channels=40*4*4, out_channels=numTrees, depth=depth, extra_outputs=1, deterministic=True)
+        self.forest= forestType(in_channels=40*4*4, out_channels=numTrees, depth=depth)
         self.agg = nn.Linear(in_features=numTrees, out_features=10)
 
         self.pool = nn.MaxPool2d(2, 2)

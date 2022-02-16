@@ -38,7 +38,7 @@ class Net(nn.Module):
     
         self.features = nn.Linear(in_features=8, out_features=numFeatures, bias=False)
         self.bn = nn.BatchNorm1d(num_features=numFeatures, affine=False)
-        self.forest= forestType(in_channels=numFeatures, out_channels=numTrees, depth=depth, deterministic=True, init_type="random")
+        self.forest= forestType(in_channels=numFeatures, out_channels=numTrees, depth=depth, init_type="random")
         self.agg = nn.Linear(in_features=numTrees, out_features=2)
 
     def forward(self, x):

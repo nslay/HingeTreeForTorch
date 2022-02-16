@@ -36,7 +36,7 @@ class Net(nn.Module):
         super(Net, self).__init__()
         self.features = nn.Linear(in_features=256, out_features=100, bias=False)
         self.bn = nn.BatchNorm1d(num_features=100, affine=False)
-        self.forest= forestType(in_channels=100, out_channels=numTrees, depth=depth, deterministic=True)
+        self.forest= forestType(in_channels=100, out_channels=numTrees, depth=depth)
         self.fc = nn.Linear(in_features=numTrees, out_features=10)
 
     def forward(self, x):
