@@ -85,6 +85,6 @@ public:
   }
 };
 
-} // end namespace rr
+} // end namespace bleak
 
 #endif // BLEAK_HINGETRIECOMMON_H
