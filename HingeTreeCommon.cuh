@@ -25,8 +25,8 @@
 
 #pragma once
 
-#ifndef BLEAK_HINGETREECOMMON_CUH
-#define BLEAK_HINGETREECOMMON_CUH
+#ifndef HINGETREECOMMON_CUH
+#define HINGETREECOMMON_CUH
 
 #include "HingeTreeCommon.h"
 
@@ -127,4 +127,4 @@ public:
 
 } // end namespace bleak
 
-#endif // BLEAK_HINGETREECOMMON_CUH
+#endif // HINGETREECOMMON_CUH

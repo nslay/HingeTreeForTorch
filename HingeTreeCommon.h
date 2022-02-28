@@ -25,8 +25,8 @@
 
 #pragma once
 
-#ifndef BLEAK_HINGETREECOMMON_H
-#define BLEAK_HINGETREECOMMON_H
+#ifndef HINGETREECOMMON_H
+#define HINGETREECOMMON_H
 
 #include <cmath>
 #include <cstdint>
@@ -229,4 +229,4 @@ public:
 
 } // end namespace bleak
 
-#endif // !BLEAK_HINGETREECOMMON_H
+#endif // !HINGETREECOMMON_H

@@ -25,8 +25,8 @@
 
 #pragma once
 
-#ifndef BLEAK_IMAGETOMATRIX_H
-#define BLEAK_IMAGETOMATRIX_H
+#ifndef IMAGETOMATRIX_H
+#define IMAGETOMATRIX_H
 
 #include <cstdint>
 #include <array>
@@ -35,7 +35,7 @@
 #include <iterator>
 #include <numeric>
 
-#define bleakNewImageToMatrix(className, superClass) \
+#define newImageToMatrix(className, superClass) \
   typedef className SelfType; \
   typedef superClass SuperType; \
   typedef typename SuperType::RasterType RasterType; \
@@ -248,11 +248,10 @@ public:
     }
   }
 
-//#ifdef BLEAK_USE_CUDA
 #ifdef WITH_CUDA
   void ExtractMatrixGPU(RealType *d_matrix, const RealType *d_image, const int64_t *d_indexMatrix, const int64_t a_i64ImageSize[Dimension+1]) const;
   void MapAndAddGPU(RealType *d_diff, int64_t i64Stride, const RealType *d_matrix, const int64_t *d_indexMatrix, const int64_t a_i64ImageSize[Dimension+1]) const;
-#endif // BLEAK_USE_CUDA
+#endif // WITH_CUDA
 
 };
 
@@ -261,7 +260,7 @@ class ImageToMatrix : public ImageToMatrixBase<RealType, Dimension> {
 public:
   typedef ImageToMatrixBase<RealType, Dimension> WorkAroundVarArgsType;
 
-  bleakNewImageToMatrix(ImageToMatrix, WorkAroundVarArgsType);
+  newImageToMatrix(ImageToMatrix, WorkAroundVarArgsType);
 
   void ExtractMatrix(RealType *p_matrix, const RealType *p_image, const int64_t a_i64ImageSize[Dimension+1]) const {
     const RasterType outRaster(ComputeOutputSize(a_i64ImageSize));
@@ -380,5 +379,5 @@ public:
 
 } // end namespace bleak
 
-#endif // !BLEAK_IMAGETOMATRIX_H
+#endif // !IMAGETOMATRIX_H
 
