@@ -16,9 +16,12 @@
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # 
 
+import math
 import torch
 import torch.nn as nn
-from HingeTree import HingeTree, HingeFern, HingeTrie
+import torch.nn.init as init
+from HingeTree import HingeTree, HingeFern, HingeTrie, HingeTreeFusedLinear
+
 
 class RandomHingeForest(nn.Module):
     __constants__ = [ "in_channels", "out_channels", "depth", "extra_outputs", "init_type" ]
@@ -286,4 +289,22 @@ class RandomHingeTrie(nn.Module):
 
         if self.weights.dim() < 2 or self.weights.shape[0] != self.thresholds.shape[0] or self.weights.shape[1] != self.thresholds.shape[1]:
             raise RuntimeError("Unexpected weight shape.")
+
+class RandomHingeForestFusedLinear(RandomHingeForest):
+    def __init__(self, in_channels: int, number_of_trees: int, out_channels: int, depth: int, extra_outputs = None, init_type: str = "random", bias: bool = True):
+        super(RandomHingeForestFusedLinear, self).__init__(in_channels, number_of_trees, depth, extra_outputs, init_type)
+
+        self.linear_weights = nn.Parameter(torch.empty([out_channels, number_of_trees]))
+        self.linear_bias = nn.Parameter(torch.zeros([out_channels]), requires_grad=bias)
+
+        # Copied from nn.Linear
+        init.kaiming_uniform_(self.linear_weights, a=math.sqrt(5))
+
+        if bias:
+            fan_in, _ = init._calculate_fan_in_and_fan_out(self.linear_weights)
+            bound = 1 / math.sqrt(fan_in) if fan_in > 0 else 0
+            init.uniform_(self.linear_bias, -bound, bound)
+
+    def forward(self, x):
+        return HingeTreeFusedLinear.apply(x, self.thresholds, self.ordinals, self.weights, self.linear_weights, self.linear_bias)
 

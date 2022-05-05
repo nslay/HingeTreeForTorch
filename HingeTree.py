@@ -29,6 +29,21 @@ def _is_deterministic():
 
     raise RuntimeError("Unable to query torch deterministic mode.")
 
+def contract(inData, window, padding=0):
+  if isinstance(window, int):
+    window = [window]*(inData.dim()-2)
+
+  if isinstance(padding, int):
+    padding = [padding]*(inData.dim()-2)
+
+  return hingetree_cpp.contract(inData, window, padding)
+
+def expand(inData, padding=0):
+  if isinstance(padding, int):
+    padding = [padding]*((inData.dim()-2)//2)
+
+  return hingetree_cpp.expand(inData, padding)
+
 class HingeTree(torch.autograd.Function):
     @staticmethod
     def forward(ctx, inData, inThresholds, inOrdinals, inWeights):
@@ -124,6 +139,27 @@ class HingeFern(torch.autograd.Function):
     @staticmethod
     def init_medians(inData, inThresholds, inOrdinals, inWeights):
         return hingetree_cpp.fern_init_medians(inData, inThresholds, inOrdinals, inWeights)
+
+class HingeTreeFusedLinear(HingeTree):
+    @staticmethod
+    def forward(ctx, inData, inThresholds, inOrdinals, inWeights, inLinearWeights, inLinearBias):
+        if _is_deterministic() and inData.device.type != "cpu":
+            raise RuntimeError("No deterministic implementation of forward for hinge tree + linear on GPUs.")
+
+        ctx.save_for_backward(inData, inThresholds, inOrdinals, inWeights, inLinearWeights, inLinearBias)
+
+        return hingetree_cpp.tree_fused_linear_forward(inData, inThresholds, inOrdinals, inWeights, inLinearWeights, inLinearBias)
+
+    @staticmethod
+    def backward(ctx, outDataGrad):
+        if _is_deterministic() and outDataGrad.device.type != "cpu":
+            raise RuntimeError("No deterministic implementation of backpropagation for hinge tree + linear on GPUs.")
+
+        inData, inThresholds, inOrdinals, inWeights, inLinearWeights, inLinearBias = ctx.saved_tensors
+
+        inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad, inLinearWeightsGrad, inLinearBiasGrad = hingetree_cpp.tree_fused_linear_backward(inData, ctx.needs_input_grad[0], inThresholds, ctx.needs_input_grad[1], inOrdinals, ctx.needs_input_grad[2], inWeights, ctx.needs_input_grad[3], inLinearWeights, ctx.needs_input_grad[4], inLinearBias, ctx.needs_input_grad[5], outDataGrad.contiguous())
+
+        return inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad, inLinearWeightsGrad, inLinearBiasGrad
 
 # Convolution operations below
 
@@ -256,4 +292,32 @@ class HingeTrie(torch.autograd.Function):
     @staticmethod
     def init_medians(inData, inThresholds, inOrdinals, inWeights):
         return hingetree_cpp.trie_init_medians(inData, inThresholds, inOrdinals, inWeights)
+
+class DiceLoss(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, inData, inMask, ignoreChannel, ignoreLabel, smooth, p, reduction):
+        if _is_deterministic() and inData.device.type != "cpu":
+            raise RuntimeError("No deterministic implementation of diceloss forward on GPUs.")
+
+        ctx.save_for_backward(inData, inMask)
+
+        ctx.ignoreChannel = ignoreChannel
+        ctx.ignoreLabel = ignoreLabel
+        ctx.smooth = smooth
+        ctx.p = p
+        ctx.reduction = reduction
+
+        return hingetree_cpp.diceloss_forward(inData, inMask, ctx.ignoreChannel, ctx.ignoreLabel, ctx.smooth, ctx.p, ctx.reduction)
+
+    @staticmethod
+    def backward(ctx, outLossGrad):
+        if _is_deterministic() and outLossGrad.device.type != "cpu":
+            raise RuntimeError("No deterministic implementation of backpropagation of diceloss on GPUs.")
+
+        print("Why? Just why?", flush=True)
+        inData, inMask = ctx.saved_tensors
+
+        inDataGrad, inMaskGrad = hingetree_cpp.diceloss_backward(inData, ctx.needs_input_grad[0], inMask, ctx.needs_input_grad[1], outLossGrad, ctx.ignoreChannel, ctx.ignoreLabel, ctx.smooth, ctx.p, ctx.reduction)
+
+        return inDataGrad, inMaskGrad
 

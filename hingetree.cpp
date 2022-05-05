@@ -1719,6 +1719,12 @@ torch::Tensor hingetrie_forward(torch::Tensor inData, torch::Tensor inThresholds
 std::vector<torch::Tensor> hingetrie_backward(torch::Tensor inData, bool bInDataGrad, torch::Tensor inThresholds, bool bInThresholdsGrad, torch::Tensor inOrdinals, bool bInOrdinalsGrad, torch::Tensor inWeights, bool bInWeightsGrad, torch::Tensor outDataGrad); 
 bool hingetrie_init_medians(torch::Tensor inData, torch::Tensor inThresholds, torch::Tensor inOrdinals, torch::Tensor inWeights);
 
+torch::Tensor hingetree_fused_linear_forward(torch::Tensor inData, torch::Tensor inThresholds, torch::Tensor inOrdinals, torch::Tensor inWeights, torch::Tensor inLinearWeights, torch::Tensor inLinearBias);
+std::vector<torch::Tensor> hingetree_fused_linear_backward(torch::Tensor inData, bool bInDataGrad, torch::Tensor inThresholds, bool bInThresholdsGrad, torch::Tensor inOrdinals, bool bInOrdinalsGrad, torch::Tensor inWeights, bool bInWeightsGrad, torch::Tensor inLinearWeights, bool bInLinearWeightsGrad, torch::Tensor inLinearBias, bool bInLinearBiasGrad, torch::Tensor outDataGrad);
+
+torch::Tensor contract(torch::Tensor inData, const std::vector<int64_t> &vWindow, const std::vector<int64_t> &vPadding);
+torch::Tensor expand(torch::Tensor inData, const std::vector<int64_t> &vPadding);
+
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   m.def("tree_forward", &hingetree_forward, "Hinge tree forward.");
   m.def("tree_backward", &hingetree_backward, "Hinge tree backward.");
@@ -1763,5 +1769,11 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   m.def("trie_forward", &hingetrie_forward, "Hinge trie forward.");
   m.def("trie_backward", &hingetrie_backward, "Hinge trie backward.");
   m.def("trie_init_medians", &hingetrie_init_medians, "Initialize decision thresholds to be medians of input data (CPU only).");
+
+  m.def("tree_fused_linear_forward", &hingetree_fused_linear_forward, "Hinge tree + linear fused forward.");
+  m.def("tree_fused_linear_backward", &hingetree_fused_linear_backward, "Hinge tree + linear fused backward.");
+
+  m.def("contract", &contract, "Collapse batched 2D or 3D image to 2D or 3D images of patches.");
+  m.def("expand", &expand, "Expand batched 2D or 3D images of patches to 2D or 3D images.");
 }
 
