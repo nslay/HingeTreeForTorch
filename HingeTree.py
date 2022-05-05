@@ -293,31 +293,4 @@ class HingeTrie(torch.autograd.Function):
     def init_medians(inData, inThresholds, inOrdinals, inWeights):
         return hingetree_cpp.trie_init_medians(inData, inThresholds, inOrdinals, inWeights)
 
-class DiceLoss(torch.autograd.Function):
-    @staticmethod
-    def forward(ctx, inData, inMask, ignoreChannel, ignoreLabel, smooth, p, reduction):
-        if _is_deterministic() and inData.device.type != "cpu":
-            raise RuntimeError("No deterministic implementation of diceloss forward on GPUs.")
-
-        ctx.save_for_backward(inData, inMask)
-
-        ctx.ignoreChannel = ignoreChannel
-        ctx.ignoreLabel = ignoreLabel
-        ctx.smooth = smooth
-        ctx.p = p
-        ctx.reduction = reduction
-
-        return hingetree_cpp.diceloss_forward(inData, inMask, ctx.ignoreChannel, ctx.ignoreLabel, ctx.smooth, ctx.p, ctx.reduction)
-
-    @staticmethod
-    def backward(ctx, outLossGrad):
-        if _is_deterministic() and outLossGrad.device.type != "cpu":
-            raise RuntimeError("No deterministic implementation of backpropagation of diceloss on GPUs.")
-
-        print("Why? Just why?", flush=True)
-        inData, inMask = ctx.saved_tensors
-
-        inDataGrad, inMaskGrad = hingetree_cpp.diceloss_backward(inData, ctx.needs_input_grad[0], inMask, ctx.needs_input_grad[1], outLossGrad, ctx.ignoreChannel, ctx.ignoreLabel, ctx.smooth, ctx.p, ctx.reduction)
-
-        return inDataGrad, inMaskGrad
 
