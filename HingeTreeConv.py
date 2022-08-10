@@ -96,7 +96,7 @@ class HingeTreeConv2d(nn.Module):
 
         thresholds = 6.0*torch.rand([out_channels, in_channels, 2**depth - 1]) - 3.0
 
-        kernelCount = reduce((lambda x, y : x*y), self.kernel_size)
+        kernelCount = reduce(operator.mul, self.kernel_size)
 
         if init_type == "random":
             ordinals = torch.randint_like(thresholds, low=0, high=kernelCount, dtype=torch.long)
