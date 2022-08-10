@@ -71,7 +71,7 @@ std::vector<std::vector<Vertex<RealType>>> FromPyTorch(torch::Tensor inThreshold
   const int64_t i64NumDecisionsPerTree = inThresholds.sizes()[1];
 
   const RealType * const p_inThresholds = inThresholds.data_ptr<RealType>();
-  const RealType * const p_inOrdinals = inOrdinals.data_ptr<RealType>();
+  const int64_t * const p_inOrdinals = inOrdinals.data_ptr<int64_t>();
 
   std::vector<std::vector<VertexType>> vTrees;
   vTrees.reserve(i64NumTrees);
@@ -84,7 +84,7 @@ std::vector<std::vector<Vertex<RealType>>> FromPyTorch(torch::Tensor inThreshold
 
     for (int64_t j = 0; j < i64NumDecisionsPerTree; ++j) {
       VertexType stVertex;
-      stVertex.i64Ordinal = (int64_t)p_inOrdinals[i*i64NumDecisionsPerTree + j];
+      stVertex.i64Ordinal = p_inOrdinals[i*i64NumDecisionsPerTree + j];
       stVertex.threshold = p_inThresholds[i*i64NumDecisionsPerTree + j];
       vVertices.push_back(stVertex);
     }
@@ -118,12 +118,12 @@ bool ToPyTorch(const std::vector<std::vector<Vertex<RealType>>> &vTrees, torch::
     return false;
 
   RealType * const p_inThresholds = inThresholds.data_ptr<RealType>();
-  RealType * const p_inOrdinals = inOrdinals.data_ptr<RealType>();
+  int64_t * const p_inOrdinals = inOrdinals.data_ptr<int64_t>();
 
   for (int64_t i = 0; i < i64NumTrees; ++i) {
     for (int64_t j = 0; j < i64NumDecisionsPerTree; ++j) {
       p_inThresholds[i*i64NumDecisionsPerTree + j] = vTrees[i][j].threshold;
-      p_inOrdinals[i*i64NumDecisionsPerTree + j] = RealType(vTrees[i][j].i64Ordinal); // Shouldn't need to assign this, but it won't hurt
+      p_inOrdinals[i*i64NumDecisionsPerTree + j] = vTrees[i][j].i64Ordinal; // Shouldn't need to assign this, but it won't hurt
     }
   }
 

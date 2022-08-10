@@ -61,7 +61,7 @@ static inline __device__ double atomicAdd(double* address, double val)
 namespace {
 
 template<typename TreeTraitsTypeGPU, typename RealType>
-__global__ void ForwardKernel(const RealType *d_matrix, const RealType *d_inThresholds, const RealType *d_inOrdinals, const RealType *d_inWeights, RealType *d_outData, 
+__global__ void ForwardKernel(const RealType *d_matrix, const RealType *d_inThresholds, const int64_t *d_inOrdinals, const RealType *d_inWeights, RealType *d_outData, 
     int64_t i64TreeDepth, int64_t i64ThresholdStride, int64_t i64WeightsStride, int64_t i64InnerWeightsNum, int64_t i64OutChannels, int64_t i64Rows, int64_t i64Cols) {
 
   typedef typename TreeTraitsTypeGPU::KeyType KeyType;
@@ -71,7 +71,7 @@ __global__ void ForwardKernel(const RealType *d_matrix, const RealType *d_inThre
 
   if (j < i64OutChannels && k < i64Rows) {
     const RealType * const d_thresholds = d_inThresholds + j*i64ThresholdStride;
-    const RealType * const d_ordinals = d_inOrdinals + j*i64ThresholdStride;
+    const int64_t * const d_ordinals = d_inOrdinals + j*i64ThresholdStride;
 
     const RealType * const d_row = d_matrix + k*i64Cols;
 
@@ -91,7 +91,7 @@ __global__ void ForwardKernel(const RealType *d_matrix, const RealType *d_inThre
 }
 
 template<typename TreeTraitsTypeGPU, typename RealType>
-__global__ void BackwardThresholdsKernel(const RealType *d_matrix, const RealType *d_inThresholds, const RealType *d_inOrdinals, const RealType *d_inWeights, 
+__global__ void BackwardThresholdsKernel(const RealType *d_matrix, const RealType *d_inThresholds, const int64_t *d_inOrdinals, const RealType *d_inWeights, 
     const RealType *d_outDataGradient, RealType *d_inThresholdsGradient, int64_t i64TreeDepth, int64_t i64ThresholdStride, int64_t i64WeightsStride, int64_t i64InnerWeightsNum, int64_t i64OutChannels, 
     int64_t i64Rows, int64_t i64Cols) {
 
@@ -102,7 +102,7 @@ __global__ void BackwardThresholdsKernel(const RealType *d_matrix, const RealTyp
 
   if (j < i64OutChannels && k < i64Rows) {
     const RealType * const d_thresholds = d_inThresholds + j*i64ThresholdStride;
-    const RealType * const d_ordinals = d_inOrdinals + j*i64ThresholdStride;
+    const int64_t * const d_ordinals = d_inOrdinals + j*i64ThresholdStride;
     RealType * const d_thresholdsGradient = d_inThresholdsGradient + j*i64ThresholdStride;
 
     const RealType * const d_row = d_matrix + k*i64Cols;
@@ -133,7 +133,7 @@ __global__ void BackwardThresholdsKernel(const RealType *d_matrix, const RealTyp
 }
 
 template<typename TreeTraitsTypeGPU, typename RealType>
-__global__ void BackwardWeightsKernel(const RealType *d_matrix, const RealType *d_inThresholds, const RealType *d_inOrdinals, /*const RealType *d_inWeights,*/
+__global__ void BackwardWeightsKernel(const RealType *d_matrix, const RealType *d_inThresholds, const int64_t *d_inOrdinals, /*const RealType *d_inWeights,*/
     const RealType *d_outDataGradient, RealType *d_inWeightsGradient, int64_t i64TreeDepth, int64_t i64ThresholdStride, int64_t i64WeightsStride, int64_t i64InnerWeightsNum, int64_t i64OutChannels, 
     int64_t i64Rows, int64_t i64Cols) {
 
@@ -144,7 +144,7 @@ __global__ void BackwardWeightsKernel(const RealType *d_matrix, const RealType *
 
   if (j < i64OutChannels && k < i64Rows) {
     const RealType * const d_thresholds = d_inThresholds + j*i64ThresholdStride;
-    const RealType * const d_ordinals = d_inOrdinals + j*i64ThresholdStride;
+    const int64_t * const d_ordinals = d_inOrdinals + j*i64ThresholdStride;
 
     const RealType * const d_row = d_matrix + k*i64Cols;
 
@@ -166,7 +166,7 @@ __global__ void BackwardWeightsKernel(const RealType *d_matrix, const RealType *
 }
 
 template<typename TreeTraitsTypeGPU, typename RealType>
-__global__ void BackwardDataKernel(const RealType *d_matrix, const int64_t *d_indexMatrix, const RealType *d_inThresholds, const RealType *d_inOrdinals, const RealType *d_inWeights, 
+__global__ void BackwardDataKernel(const RealType *d_matrix, const int64_t *d_indexMatrix, const RealType *d_inThresholds, const int64_t *d_inOrdinals, const RealType *d_inWeights, 
     const RealType *d_outDataGradient, RealType *d_inDataGradient, int64_t i64TreeDepth, int64_t i64ThresholdStride, int64_t i64WeightsStride, int64_t i64InnerWeightsNum, int64_t i64OutChannels, 
     int64_t i64Rows, int64_t i64Cols) {
 
@@ -177,7 +177,7 @@ __global__ void BackwardDataKernel(const RealType *d_matrix, const int64_t *d_in
 
   if (j < i64OutChannels && k < i64Rows) {
     const RealType * const d_thresholds = d_inThresholds + j*i64ThresholdStride;
-    const RealType * const d_ordinals = d_inOrdinals + j*i64ThresholdStride;
+    const int64_t * const d_ordinals = d_inOrdinals + j*i64ThresholdStride;
 
     const RealType * const d_row = d_matrix + k*i64Cols;
     const int64_t * const d_i64IndexRow = d_indexMatrix + k*i64Cols;
@@ -188,7 +188,7 @@ __global__ void BackwardDataKernel(const RealType *d_matrix, const int64_t *d_in
     const KeyType key = keyMarginTuple.leafKey;
     const RealType signedMargin = keyMarginTuple.signedMargin;
     const KeyType thresholdIndex = keyMarginTuple.thresholdIndex;
-    const int64_t i64FeatureIndex = (int64_t)d_ordinals[thresholdIndex];
+    const int64_t i64FeatureIndex = d_ordinals[thresholdIndex];
     const int64_t i64ImageIndex = d_i64IndexRow[i64FeatureIndex];
 
     if (i64ImageIndex >= 0) {
@@ -251,7 +251,7 @@ torch::Tensor hingetree_conv_gpu_forward(torch::Tensor inData, torch::Tensor inT
 
   const int64_t i64KernelCount = clImageToMatrix.ComputeKernelCount();
 
-  if (inOrdinals.min().item<RealType>() < RealType(0) || inOrdinals.max().item<RealType>() >= RealType(i64KernelCount))
+  if (inOrdinals.min().to(torch::kCPU).item<int64_t>() < 0 || inOrdinals.max().to(torch::kCPU).item<int64_t>() >= i64KernelCount)
     return torch::Tensor();
 
   const int64_t i64NumLeavesPerTree = inWeights.sizes()[2];
@@ -332,7 +332,7 @@ torch::Tensor hingetree_conv_gpu_forward(torch::Tensor inData, torch::Tensor inT
 
   const RealType * const d_inData = inData.data_ptr<RealType>();
   const RealType * const d_inThresholds = inThresholds.data_ptr<RealType>();
-  const RealType * const d_inOrdinals = inOrdinals.data_ptr<RealType>();
+  const int64_t * const d_inOrdinals = inOrdinals.data_ptr<int64_t>();
   const RealType * const d_inWeights = inWeights.data_ptr<RealType>();
 
   // Trees vs Patch Rows (m_iRows)
@@ -402,7 +402,7 @@ std::vector<torch::Tensor> hingetree_conv_gpu_backward(torch::Tensor inData, boo
 
   const int64_t i64KernelCount = clImageToMatrix.ComputeKernelCount();
 
-  if (inOrdinals.min().item<RealType>() < RealType(0) || inOrdinals.max().item<RealType>() >= RealType(i64KernelCount))
+  if (inOrdinals.min().to(torch::kCPU).item<int64_t>() < 0 || inOrdinals.max().to(torch::kCPU).item<int64_t>() >= i64KernelCount)
     return std::vector<torch::Tensor>();
 
   const int64_t i64NumLeavesPerTree = inWeights.sizes()[2];
@@ -479,7 +479,7 @@ std::vector<torch::Tensor> hingetree_conv_gpu_backward(torch::Tensor inData, boo
 
   const RealType * const d_inData = inData.data_ptr<RealType>();
   const RealType * const d_inThresholds = inThresholds.data_ptr<RealType>();
-  const RealType * const d_inOrdinals = inOrdinals.data_ptr<RealType>();
+  const int64_t * const d_inOrdinals = inOrdinals.data_ptr<int64_t>();
   const RealType * const d_inWeights = inWeights.data_ptr<RealType>();
 
   // Trees vs Patch Rows (m_iRows)

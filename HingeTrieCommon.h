@@ -68,13 +68,13 @@ public:
   //static int GetLeafCount(int iTreeDepth) { return 1 << iTreeDepth; } // Not used yet! Maybe never...
 
   // Returns leaf key, signed margin and threshold/ordinal index
-  static void ComputeKeyAndSignedMargin(KeyMarginTupleType a_tplPath[GetMaxDepth()], const RealType *p_data, const RealType *p_thresholds, const RealType *p_ordinals, int64_t i64TreeDepth, int64_t i64Stride = 1) {
+  static void ComputeKeyAndSignedMargin(KeyMarginTupleType a_tplPath[GetMaxDepth()], const RealType *p_data, const RealType *p_thresholds, const int64_t *p_ordinals, int64_t i64TreeDepth, int64_t i64Stride = 1) {
     KeyType treeIndex = KeyType();
 
     //vPath.resize(i64TreeDepth);
 
     for (int64_t i = 0; i < i64TreeDepth; ++i) {
-      const int64_t j = (int64_t)p_ordinals[treeIndex];
+      const int64_t j = p_ordinals[treeIndex];
       const RealType margin = p_data[j*i64Stride] - p_thresholds[treeIndex];
       const KeyType bit = (margin > RealType(0));
 

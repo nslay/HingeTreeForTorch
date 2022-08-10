@@ -52,12 +52,12 @@ torch::Tensor hingetrie_cpu_forward(torch::Tensor inData, torch::Tensor inThresh
   const int64_t i64BatchSize = inData.sizes()[0];
   const int64_t i64NumChannels = inData.sizes()[1];
 
-  if (inOrdinals.min().item<RealType>() < RealType(0) || inOrdinals.max().item<RealType>() >= RealType(i64NumChannels))
+  if (inOrdinals.min().item<int64_t>() < 0 || inOrdinals.max().item<int64_t>() >= i64NumChannels)
     return torch::Tensor();
 
   const RealType * const p_inData = inData.data_ptr<RealType>();
   const RealType * const p_inThresholds = inThresholds.data_ptr<RealType>();
-  const RealType * const p_inOrdinals = inOrdinals.data_ptr<RealType>();
+  const int64_t * const p_inOrdinals = inOrdinals.data_ptr<int64_t>();
   const RealType * const p_inWeights = inWeights.data_ptr<RealType>();
 
   std::vector<IntArrayRef::value_type> vSizes;
@@ -145,7 +145,7 @@ std::vector<torch::Tensor> hingetrie_cpu_backward(torch::Tensor inData, bool bIn
   const int64_t i64BatchSize = inData.sizes()[0];
   const int64_t i64NumChannels = inData.sizes()[1];
 
-  if (inOrdinals.min().item<RealType>() < RealType(0) || inOrdinals.max().item<RealType>() >= RealType(i64NumChannels))
+  if (inOrdinals.min().item<int64_t>() < 0 || inOrdinals.max().item<int64_t>() >= i64NumChannels)
     return std::vector<torch::Tensor>();
 
   std::vector<IntArrayRef::value_type> vSizes;
@@ -176,7 +176,7 @@ std::vector<torch::Tensor> hingetrie_cpu_backward(torch::Tensor inData, bool bIn
   
   const RealType * const p_inData = inData.data_ptr<RealType>();
   const RealType * const p_inThresholds = inThresholds.data_ptr<RealType>();
-  const RealType * const p_inOrdinals = inOrdinals.data_ptr<RealType>();
+  const int64_t * const p_inOrdinals = inOrdinals.data_ptr<int64_t>();
   const RealType * const p_inWeights = inWeights.data_ptr<RealType>();
   const RealType * const p_outDataGrad = outDataGrad.data_ptr<RealType>();
   
@@ -199,7 +199,7 @@ std::vector<torch::Tensor> hingetrie_cpu_backward(torch::Tensor inData, bool bIn
               const RealType margin = std::get<0>(a_tplPath[d]);
               const KeyType treeIndex = std::get<1>(a_tplPath[d]);
 
-              const int64_t i64InputIndex = (int64_t)p_inOrdinals[j*i64NumDecisionsPerTree + treeIndex];
+              const int64_t i64InputIndex = p_inOrdinals[j*i64NumDecisionsPerTree + treeIndex];
               const RealType sign = RealType((RealType(0) < margin) - (margin < RealType(0)));
               p_inDataGrad[(i*i64NumChannels + i64InputIndex)*i64InnerDataNum + k] += sign * p_inWeights[(j*i64NumDecisionsPerTree + treeIndex)*i64InnerWeightsNum + m] * p_outDataGrad[((i*i64NumTrees + j)*i64InnerDataNum + k)*i64InnerWeightsNum + m];
             }
@@ -268,7 +268,7 @@ std::vector<torch::Tensor> hingetrie_cpu_backward(torch::Tensor inData, bool bIn
 }
 
 torch::Tensor hingetrie_forward(torch::Tensor inData, torch::Tensor inThresholds, torch::Tensor inOrdinals, torch::Tensor inWeights) {
-  if (inData.dtype() != inThresholds.dtype() || inData.dtype() != inOrdinals.dtype() || inData.dtype() != inWeights.dtype())
+  if (inData.dtype() != inThresholds.dtype() || torch::kInt64 != inOrdinals.scalar_type() || inData.dtype() != inWeights.dtype())
     return torch::Tensor();
   
   if (inData.device() != inThresholds.device() || inData.device() != inOrdinals.device() || inData.device() != inWeights.device())
@@ -310,7 +310,7 @@ torch::Tensor hingetrie_forward(torch::Tensor inData, torch::Tensor inThresholds
 }
 
 std::vector<torch::Tensor> hingetrie_backward(torch::Tensor inData, bool bInDataGrad, torch::Tensor inThresholds, bool bInThresholdsGrad, torch::Tensor inOrdinals, bool bInOrdinalsGrad, torch::Tensor inWeights, bool bInWeightsGrad, torch::Tensor outDataGrad) {
-  if (inData.dtype() != inThresholds.dtype() || inData.dtype() != inOrdinals.dtype() || inData.dtype() != inWeights.dtype() || inData.dtype() != outDataGrad.dtype())
+  if (inData.dtype() != inThresholds.dtype() || torch::kInt64 != inOrdinals.scalar_type() || inData.dtype() != inWeights.dtype() || inData.dtype() != outDataGrad.dtype())
     return std::vector<torch::Tensor>();
   
   if (inData.device() != inThresholds.device() || inData.device() != inOrdinals.device() || inData.device() != inWeights.device() || inData.device() != outDataGrad.device())
@@ -352,7 +352,7 @@ std::vector<torch::Tensor> hingetrie_backward(torch::Tensor inData, bool bInData
 }
 
 bool hingetrie_init_medians(torch::Tensor inData, torch::Tensor inThresholds, torch::Tensor inOrdinals, torch::Tensor inWeights) {
-  if (inData.dtype() != inThresholds.dtype() || inData.dtype() != inOrdinals.dtype() || inData.dtype() != inWeights.dtype())
+  if (inData.dtype() != inThresholds.dtype() || torch::kInt64 != inOrdinals.scalar_type() || inData.dtype() != inWeights.dtype())
     return false;
   
   if (inData.device() != torch::kCPU || inData.device() != inThresholds.device() || inData.device() != inOrdinals.device() || inData.device() != inWeights.device())

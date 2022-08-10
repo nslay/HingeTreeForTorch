@@ -57,13 +57,13 @@ public:
   __device__ static int64_t GetLeafCount(int64_t i64TreeDepth) { return ((int64_t)1) << i64TreeDepth; }
 
   // Returns leaf key, signed margin and threshold/ordinal index
-  __device__ static KeyMarginTupleType ComputeKeyAndSignedMargin(const RealType *p_data, const RealType *p_thresholds, const RealType *p_ordinals, int64_t i64TreeDepth, int64_t i64Stride = 1) {
+  __device__ static KeyMarginTupleType ComputeKeyAndSignedMargin(const RealType *p_data, const RealType *p_thresholds, const int64_t *p_ordinals, int64_t i64TreeDepth, int64_t i64Stride = 1) {
     KeyType leafKey = KeyType();
-    RealType minMargin = p_data[i64Stride*(int64_t)p_ordinals[0]] - p_thresholds[0];
+    RealType minMargin = p_data[i64Stride*p_ordinals[0]] - p_thresholds[0];
     KeyType minFernIndex = 0;
 
     for (int64_t i = 0; i < i64TreeDepth; ++i) {
-      const int64_t j = (int64_t)p_ordinals[i];
+      const int64_t j = p_ordinals[i];
       const RealType margin = p_data[i64Stride*j] - p_thresholds[i];
       const KeyType bit = (margin > RealType(0));
 
@@ -101,14 +101,14 @@ public:
   __device__ static int64_t GetLeafCount(int64_t i64TreeDepth) { return ((int64_t)1) << i64TreeDepth; }
 
   // Returns leaf key, signed margin and threshold/ordinal index
-  __device__ static KeyMarginTupleType ComputeKeyAndSignedMargin(const RealType *p_data, const RealType *p_thresholds, const RealType *p_ordinals, int64_t i64TreeDepth, int64_t i64Stride = 1) {
+  __device__ static KeyMarginTupleType ComputeKeyAndSignedMargin(const RealType *p_data, const RealType *p_thresholds, const int64_t *p_ordinals, int64_t i64TreeDepth, int64_t i64Stride = 1) {
     KeyType leafKey = KeyType();
     KeyType treeIndex = KeyType();
-    RealType minMargin = p_data[i64Stride * (int64_t)p_ordinals[0]] - p_thresholds[0];
+    RealType minMargin = p_data[i64Stride * p_ordinals[0]] - p_thresholds[0];
     KeyType minTreeIndex = KeyType();
 
     for (int64_t i = 0; i < i64TreeDepth; ++i) {
-      const int64_t j = (int64_t)p_ordinals[treeIndex];
+      const int64_t j = p_ordinals[treeIndex];
       const RealType margin = p_data[j*i64Stride] - p_thresholds[treeIndex];
       const KeyType bit = (margin > RealType(0));
 

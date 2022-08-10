@@ -20,6 +20,7 @@ import torch
 import torch.nn as nn
 import HingeTree
 from functools import reduce
+import operator
 
 def _as_tuple(x, N: int):
     if isinstance(x, int):
@@ -50,13 +51,13 @@ class HingeTreeConv1d(nn.Module):
 
         thresholds = 6.0*torch.rand([out_channels, in_channels, 2**depth - 1]) - 3.0
 
-        kernelCount = reduce((lambda x, y : x*y), self.kernel_size)
+        kernelCount = reduce(operator.mul, self.kernel_size)
 
         if init_type == "random":
-            ordinals = torch.randint_like(thresholds, low=0, high=kernelCount)
+            ordinals = torch.randint_like(thresholds, low=0, high=kernelCount, dtype=torch.long)
         elif init_type == "sequential":
-            ordinals = torch.arange(thresholds.numel(), dtype=thresholds.dtype)
-            ordinals -= kernelCount * (ordinals / kernelCount).type(torch.int32)
+            ordinals = torch.arange(thresholds.numel(), dtype=torch.long)
+            ordinals -= kernelCount * (ordinals // kernelCount)
             ordinals = torch.reshape(ordinals, thresholds.shape)
         else:
             raise RuntimeError(f"Unknown init_type {init_type}. Must be one of 'random' or 'sequential'.")
@@ -73,7 +74,7 @@ class HingeTreeConv1d(nn.Module):
         self.ordinals = nn.Parameter(ordinals, requires_grad=False)
 
     def forward(self, x):
-        return HingeTree.HingeTreeConv1d.apply(x, self.thresholds, self.ordinals, self.weights, torch.tensor(self.kernel_size, dtype=torch.int64), torch.tensor(self.stride, dtype=torch.int64), torch.tensor(self.padding, dtype=torch.int64), torch.tensor(self.dilation, dtype=torch.int64))
+        return HingeTree.HingeTreeConv1d.apply(x, self.thresholds, self.ordinals, self.weights, self.kernel_size, self.stride, self.padding, self.dilation)
 
 class HingeTreeConv2d(nn.Module):
     __constants__ = [ "in_channels", "out_channels", "depth", "extra_outputs", "kernel_size", "stride", "padding", "dilation", "init_type" ]
@@ -98,10 +99,10 @@ class HingeTreeConv2d(nn.Module):
         kernelCount = reduce((lambda x, y : x*y), self.kernel_size)
 
         if init_type == "random":
-            ordinals = torch.randint_like(thresholds, low=0, high=kernelCount)
+            ordinals = torch.randint_like(thresholds, low=0, high=kernelCount, dtype=torch.long)
         elif init_type == "sequential":
-            ordinals = torch.arange(thresholds.numel(), dtype=thresholds.dtype)
-            ordinals -= kernelCount * (ordinals / kernelCount).type(torch.int32)
+            ordinals = torch.arange(thresholds.numel(), dtype=torch.long)
+            ordinals -= kernelCount * (ordinals // kernelCount)
             ordinals = torch.reshape(ordinals, thresholds.shape)
         else:
             raise RuntimeError(f"Unknown init_type {init_type}. Must be one of 'random' or 'sequential'.")
@@ -118,7 +119,7 @@ class HingeTreeConv2d(nn.Module):
         self.ordinals = nn.Parameter(ordinals, requires_grad=False)
 
     def forward(self, x):
-        return HingeTree.HingeTreeConv2d.apply(x, self.thresholds, self.ordinals, self.weights, torch.tensor(self.kernel_size, dtype=torch.int64), torch.tensor(self.stride, dtype=torch.int64), torch.tensor(self.padding, dtype=torch.int64), torch.tensor(self.dilation, dtype=torch.int64))
+        return HingeTree.HingeTreeConv2d.apply(x, self.thresholds, self.ordinals, self.weights, self.kernel_size, self.stride, self.padding, self.dilation)
 
 class HingeTreeConv3d(nn.Module):
     __constants__ = [ "in_channels", "out_channels", "depth", "extra_outputs", "kernel_size", "stride", "padding", "dilation", "init_type" ]
@@ -143,10 +144,10 @@ class HingeTreeConv3d(nn.Module):
         kernelCount = reduce((lambda x, y : x*y), self.kernel_size)
 
         if init_type == "random":
-            ordinals = torch.randint_like(thresholds, low=0, high=kernelCount)
+            ordinals = torch.randint_like(thresholds, low=0, high=kernelCount, dtype=torch.long)
         elif init_type == "sequential":
-            ordinals = torch.arange(thresholds.numel(), dtype=thresholds.dtype)
-            ordinals -= kernelCount * (ordinals / kernelCount).type(torch.int32)
+            ordinals = torch.arange(thresholds.numel(), dtype=torch.long)
+            ordinals -= kernelCount * (ordinals // kernelCount)
             ordinals = torch.reshape(ordinals, thresholds.shape)
         else:
             raise RuntimeError(f"Unknown init_type {init_type}. Must be one of 'random' or 'sequential'.")
@@ -163,7 +164,7 @@ class HingeTreeConv3d(nn.Module):
         self.ordinals = nn.Parameter(ordinals, requires_grad=False)
 
     def forward(self, x):
-        return HingeTree.HingeTreeConv3d.apply(x, self.thresholds, self.ordinals, self.weights, torch.tensor(self.kernel_size, dtype=torch.int64), torch.tensor(self.stride, dtype=torch.int64), torch.tensor(self.padding, dtype=torch.int64), torch.tensor(self.dilation, dtype=torch.int64))
+        return HingeTree.HingeTreeConv3d.apply(x, self.thresholds, self.ordinals, self.weights, self.kernel_size, self.stride, self.padding, self.dilation)
 
 class HingeFernConv1d(nn.Module):
     __constants__ = [ "in_channels", "out_channels", "depth", "extra_outputs", "kernel_size", "stride", "padding", "dilation", "init_type" ]
@@ -188,10 +189,10 @@ class HingeFernConv1d(nn.Module):
         kernelCount = reduce((lambda x, y : x*y), self.kernel_size)
 
         if init_type == "random":
-            ordinals = torch.randint_like(thresholds, low=0, high=kernelCount)
+            ordinals = torch.randint_like(thresholds, low=0, high=kernelCount, dtype=torch.long)
         elif init_type == "sequential":
-            ordinals = torch.arange(thresholds.numel(), dtype=thresholds.dtype)
-            ordinals -= kernelCount * (ordinals / kernelCount).type(torch.int32)
+            ordinals = torch.arange(thresholds.numel(), dtype=torch.long)
+            ordinals -= kernelCount * (ordinals // kernelCount)
             ordinals = torch.reshape(ordinals, thresholds.shape)
         else:
             raise RuntimeError(f"Unknown init_type {init_type}. Must be one of 'random' or 'sequential'.")
@@ -208,7 +209,7 @@ class HingeFernConv1d(nn.Module):
         self.ordinals = nn.Parameter(ordinals, requires_grad=False)
 
     def forward(self, x):
-        return HingeTree.HingeFernConv1d.apply(x, self.thresholds, self.ordinals, self.weights, torch.tensor(self.kernel_size, dtype=torch.int64), torch.tensor(self.stride, dtype=torch.int64), torch.tensor(self.padding, dtype=torch.int64), torch.tensor(self.dilation, dtype=torch.int64))
+        return HingeTree.HingeFernConv1d.apply(x, self.thresholds, self.ordinals, self.weights, self.kernel_size, self.stride, self.padding, self.dilation)
 
 class HingeFernConv2d(nn.Module):
     __constants__ = [ "in_channels", "out_channels", "depth", "extra_outputs", "kernel_size", "stride", "padding", "dilation", "init_type" ]
@@ -233,10 +234,10 @@ class HingeFernConv2d(nn.Module):
         kernelCount = reduce((lambda x, y : x*y), self.kernel_size)
 
         if init_type == "random":
-            ordinals = torch.randint_like(thresholds, low=0, high=kernelCount)
+            ordinals = torch.randint_like(thresholds, low=0, high=kernelCount, dtype=torch.long)
         elif init_type == "sequential":
-            ordinals = torch.arange(thresholds.numel(), dtype=thresholds.dtype)
-            ordinals -= kernelCount * (ordinals / kernelCount).type(torch.int32)
+            ordinals = torch.arange(thresholds.numel(), dtype=torch.long)
+            ordinals -= kernelCount * (ordinals // kernelCount)
             ordinals = torch.reshape(ordinals, thresholds.shape)
         else:
             raise RuntimeError(f"Unknown init_type {init_type}. Must be one of 'random' or 'sequential'.")
@@ -253,7 +254,7 @@ class HingeFernConv2d(nn.Module):
         self.ordinals = nn.Parameter(ordinals, requires_grad=False)
 
     def forward(self, x):
-        return HingeTree.HingeFernConv2d.apply(x, self.thresholds, self.ordinals, self.weights, torch.tensor(self.kernel_size, dtype=torch.int64), torch.tensor(self.stride, dtype=torch.int64), torch.tensor(self.padding, dtype=torch.int64), torch.tensor(self.dilation, dtype=torch.int64))
+        return HingeTree.HingeFernConv2d.apply(x, self.thresholds, self.ordinals, self.weights, self.kernel_size, self.stride, self.padding, self.dilation)
 
 class HingeFernConv3d(nn.Module):
     __constants__ = [ "in_channels", "out_channels", "depth", "extra_outputs", "kernel_size", "stride", "padding", "dilation", "init_type" ]
@@ -278,10 +279,10 @@ class HingeFernConv3d(nn.Module):
         kernelCount = reduce((lambda x, y : x*y), self.kernel_size)
 
         if init_type == "random":
-            ordinals = torch.randint_like(thresholds, low=0, high=kernelCount)
+            ordinals = torch.randint_like(thresholds, low=0, high=kernelCount, dtype=torch.long)
         elif init_type == "sequential":
-            ordinals = torch.arange(thresholds.numel(), dtype=thresholds.dtype)
-            ordinals -= kernelCount * (ordinals / kernelCount).type(torch.int32)
+            ordinals = torch.arange(thresholds.numel(), dtype=torch.long)
+            ordinals -= kernelCount * (ordinals // kernelCount)
             ordinals = torch.reshape(ordinals, thresholds.shape)
         else:
             raise RuntimeError(f"Unknown init_type {init_type}. Must be one of 'random' or 'sequential'.")
@@ -298,5 +299,5 @@ class HingeFernConv3d(nn.Module):
         self.ordinals = nn.Parameter(ordinals, requires_grad=False)
 
     def forward(self, x):
-        return HingeTree.HingeFernConv3d.apply(x, self.thresholds, self.ordinals, self.weights, torch.tensor(self.kernel_size, dtype=torch.int64), torch.tensor(self.stride, dtype=torch.int64), torch.tensor(self.padding, dtype=torch.int64), torch.tensor(self.dilation, dtype=torch.int64))
+        return HingeTree.HingeFernConv3d.apply(x, self.thresholds, self.ordinals, self.weights, self.kernel_size, self.stride, self.padding, self.dilation)
 

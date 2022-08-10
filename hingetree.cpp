@@ -72,12 +72,12 @@ torch::Tensor hingetree_cpu_forward(torch::Tensor inData, torch::Tensor inThresh
   const int64_t i64NumChannels = inData.sizes()[1];
   const int64_t i64NumDecisionsPerTree = inThresholds.sizes()[1];
 
-  if (inOrdinals.min().item<RealType>() < RealType(0) || inOrdinals.max().item<RealType>() >= RealType(i64NumChannels))
+  if (inOrdinals.min().item<int64_t>() < 0 || inOrdinals.max().item<int64_t>() >= i64NumChannels)
     return torch::Tensor();
 
   const RealType * const p_inData = inData.data_ptr<RealType>();
   const RealType * const p_inThresholds = inThresholds.data_ptr<RealType>();
-  const RealType * const p_inOrdinals = inOrdinals.data_ptr<RealType>();
+  const int64_t * const p_inOrdinals = inOrdinals.data_ptr<int64_t>();
   const RealType * const p_inWeights = inWeights.data_ptr<RealType>();
   
   std::vector<IntArrayRef::value_type> vSizes;
@@ -158,7 +158,7 @@ std::vector<torch::Tensor> hingetree_cpu_backward(torch::Tensor inData, bool bIn
   const int64_t i64NumChannels = inData.sizes()[1];
   const int64_t i64NumDecisionsPerTree = inThresholds.sizes()[1];
 
-  if (inOrdinals.min().item<RealType>() < RealType(0) || inOrdinals.max().item<RealType>() >= RealType(i64NumChannels))
+  if (inOrdinals.min().item<int64_t>() < 0 || inOrdinals.max().item<int64_t>() >= i64NumChannels)
     return std::vector<torch::Tensor>();
 
   std::vector<IntArrayRef::value_type> vSizes;
@@ -189,7 +189,7 @@ std::vector<torch::Tensor> hingetree_cpu_backward(torch::Tensor inData, bool bIn
   
   const RealType * const p_inData = inData.data_ptr<RealType>();
   const RealType * const p_inThresholds = inThresholds.data_ptr<RealType>();
-  const RealType * const p_inOrdinals = inOrdinals.data_ptr<RealType>();
+  const int64_t * const p_inOrdinals = inOrdinals.data_ptr<int64_t>();
   const RealType * const p_inWeights = inWeights.data_ptr<RealType>();
   const RealType * const p_outDataGrad = outDataGrad.data_ptr<RealType>();
   
@@ -209,7 +209,7 @@ std::vector<torch::Tensor> hingetree_cpu_backward(torch::Tensor inData, bool bIn
           const RealType margin = std::get<1>(clKeyMarginTuple); // Signed margin
           const KeyType treeIndex = std::get<2>(clKeyMarginTuple);
           
-          const int64_t i64InputIndex = (int64_t)p_inOrdinals[j*i64NumDecisionsPerTree + treeIndex];
+          const int64_t i64InputIndex = p_inOrdinals[j*i64NumDecisionsPerTree + treeIndex];
           const RealType sign = RealType((RealType(0) < margin) - (margin < RealType(0)));
 
           for (int64_t m = 0; m < i64InnerWeightsNum; ++m) {
@@ -297,12 +297,12 @@ torch::Tensor hingetree_cpu_leafmap(torch::Tensor inData, torch::Tensor inThresh
   const int64_t i64NumChannels = inData.sizes()[1];
   const int64_t i64NumDecisionsPerTree = inThresholds.sizes()[1];
 
-  if (inOrdinals.min().item<RealType>() < RealType(0) || inOrdinals.max().item<RealType>() >= RealType(i64NumChannels))
+  if (inOrdinals.min().item<int64_t>() < 0 || inOrdinals.max().item<int64_t>() >= i64NumChannels)
     return torch::Tensor();
 
   const RealType * const p_inData = inData.data_ptr<RealType>();
   const RealType * const p_inThresholds = inThresholds.data_ptr<RealType>();
-  const RealType * const p_inOrdinals = inOrdinals.data_ptr<RealType>();
+  const int64_t * const p_inOrdinals = inOrdinals.data_ptr<int64_t>();
   
   std::vector<IntArrayRef::value_type> vSizes;
   
@@ -365,12 +365,12 @@ std::vector<torch::Tensor> hingetree_cpu_marginmap(torch::Tensor inData, torch::
   const int64_t i64NumChannels = inData.sizes()[1];
   const int64_t i64NumDecisionsPerTree = inThresholds.sizes()[1];
 
-  if (inOrdinals.min().item<RealType>() < RealType(0) || inOrdinals.max().item<RealType>() >= RealType(i64NumChannels))
+  if (inOrdinals.min().item<int64_t>() < 0 || inOrdinals.max().item<int64_t>() >= i64NumChannels)
     return std::vector<torch::Tensor>();
 
   const RealType * const p_inData = inData.data_ptr<RealType>();
   const RealType * const p_inThresholds = inThresholds.data_ptr<RealType>();
-  const RealType * const p_inOrdinals = inOrdinals.data_ptr<RealType>();
+  const int64_t * const p_inOrdinals = inOrdinals.data_ptr<int64_t>();
   
   std::vector<IntArrayRef::value_type> vSizes;
   
@@ -386,10 +386,10 @@ std::vector<torch::Tensor> hingetree_cpu_marginmap(torch::Tensor inData, torch::
   }
 
   torch::Tensor outMargins = torch::empty(IntArrayRef(vSizes.data(), vSizes.size()), clOptions);
-  torch::Tensor outOrdinals = torch::empty(IntArrayRef(vSizes.data(), vSizes.size()), clOptions);
+  torch::Tensor outOrdinals = torch::empty(IntArrayRef(vSizes.data(), vSizes.size()), clOptions.dtype(torch::kInt64));
 
   RealType * const p_outMargins = outMargins.data_ptr<RealType>();
-  RealType * const p_outOrdinals = outOrdinals.data_ptr<RealType>();
+  int64_t *p_outOrdinals = outOrdinals.data_ptr<int64_t>();
 
   int64_t i64InnerDataNum = 1;
   
@@ -454,7 +454,7 @@ std::vector<bool> hingetree_cpu_check_thresholds(torch::Tensor inThresholds, tor
     return std::vector<bool>();
   
   const RealType * const p_inThresholds = inThresholds.data_ptr<RealType>();
-  const RealType * const p_inOrdinals = inOrdinals.data_ptr<RealType>();
+  const int64_t * const p_inOrdinals = inOrdinals.data_ptr<int64_t>();
 
   std::vector<bool> vGood(i64NumTrees);
 
@@ -481,7 +481,7 @@ std::vector<bool> hingetree_cpu_fix_thresholds(torch::Tensor inThresholds, torch
     return std::vector<bool>();
   
   RealType * const p_inThresholds = inThresholds.data_ptr<RealType>();
-  const RealType * const p_inOrdinals = inOrdinals.data_ptr<RealType>();
+  const int64_t * const p_inOrdinals = inOrdinals.data_ptr<int64_t>();
 
   std::vector<bool> vChangesMade(i64NumTrees);
 
@@ -512,12 +512,12 @@ torch::Tensor hingetree_cpu_reachability(torch::Tensor inData, torch::Tensor inT
   const int64_t i64NumChannels = inData.sizes()[1];
   const int64_t i64NumDecisionsPerTree = inThresholds.sizes()[1];
  
-  if (inOrdinals.min().item<RealType>() < RealType(0) || inOrdinals.max().item<RealType>() >= RealType(i64NumChannels))
+  if (inOrdinals.min().item<int64_t>() < 0 || inOrdinals.max().item<int64_t>() >= i64NumChannels)
     return torch::Tensor();
 
   const RealType * const p_inData = inData.data_ptr<RealType>();
   const RealType * const p_inThresholds = inThresholds.data_ptr<RealType>();
-  const RealType * const p_inOrdinals = inOrdinals.data_ptr<RealType>();
+  const int64_t * const p_inOrdinals = inOrdinals.data_ptr<int64_t>();
 
   auto clOptions = torch::TensorOptions().dtype(inData.dtype()).device(inData.device());
   torch::Tensor outCounts = torch::zeros(inWeights.sizes().slice(0,2), clOptions);
@@ -547,7 +547,7 @@ torch::Tensor hingetree_cpu_reachability(torch::Tensor inData, torch::Tensor inT
 }
 
 torch::Tensor hingetree_forward(torch::Tensor inData, torch::Tensor inThresholds, torch::Tensor inOrdinals, torch::Tensor inWeights) {
-  if (inData.dtype() != inThresholds.dtype() || inData.dtype() != inOrdinals.dtype() || inData.dtype() != inWeights.dtype())
+  if (inData.dtype() != inThresholds.dtype() || torch::kInt64 != inOrdinals.scalar_type() || inData.dtype() != inWeights.dtype())
     return torch::Tensor();
   
   if (inData.device() != inThresholds.device() || inData.device() != inOrdinals.device() || inData.device() != inWeights.device())
@@ -587,7 +587,7 @@ torch::Tensor hingetree_forward(torch::Tensor inData, torch::Tensor inThresholds
 }
 
 std::vector<torch::Tensor> hingetree_backward(torch::Tensor inData, bool bInDataGrad, torch::Tensor inThresholds, bool bInThresholdsGrad, torch::Tensor inOrdinals, bool bInOrdinalsGrad, torch::Tensor inWeights, bool bInWeightsGrad, torch::Tensor outDataGrad) {
-  if (inData.dtype() != inThresholds.dtype() || inData.dtype() != inOrdinals.dtype() || inData.dtype() != inWeights.dtype() || inData.dtype() != outDataGrad.dtype())
+  if (inData.dtype() != inThresholds.dtype() || torch::kInt64 != inOrdinals.scalar_type() || inData.dtype() != inWeights.dtype() || inData.dtype() != outDataGrad.dtype())
     return std::vector<torch::Tensor>();
   
   if (inData.device() != inThresholds.device() || inData.device() != inOrdinals.device() || inData.device() != inWeights.device() || inData.device() != outDataGrad.device())
@@ -627,7 +627,7 @@ std::vector<torch::Tensor> hingetree_backward(torch::Tensor inData, bool bInData
 }
 
 std::vector<torch::Tensor> hingetree_backward_deterministic(torch::Tensor inData, bool bInDataGrad, torch::Tensor inThresholds, bool bInThresholdsGrad, torch::Tensor inOrdinals, bool bInOrdinalsGrad, torch::Tensor inWeights, bool bInWeightsGrad, torch::Tensor outDataGrad) {
-  if (inData.dtype() != inThresholds.dtype() || inData.dtype() != inOrdinals.dtype() || inData.dtype() != inWeights.dtype() || inData.dtype() != outDataGrad.dtype())
+  if (inData.dtype() != inThresholds.dtype() || torch::kInt64 != inOrdinals.scalar_type() || inData.dtype() != inWeights.dtype() || inData.dtype() != outDataGrad.dtype())
     return std::vector<torch::Tensor>();
   
   if (inData.device() != inThresholds.device() || inData.device() != inOrdinals.device() || inData.device() != inWeights.device() || inData.device() != outDataGrad.device())
@@ -667,7 +667,7 @@ std::vector<torch::Tensor> hingetree_backward_deterministic(torch::Tensor inData
 }
 
 torch::Tensor hingefern_forward(torch::Tensor inData, torch::Tensor inThresholds, torch::Tensor inOrdinals, torch::Tensor inWeights) {
-  if (inData.dtype() != inThresholds.dtype() || inData.dtype() != inOrdinals.dtype() || inData.dtype() != inWeights.dtype())
+  if (inData.dtype() != inThresholds.dtype() || torch::kInt64 != inOrdinals.scalar_type() || inData.dtype() != inWeights.dtype())
     return torch::Tensor();
   
   if (inData.device() != inThresholds.device() || inData.device() != inOrdinals.device() || inData.device() != inWeights.device())
@@ -707,7 +707,7 @@ torch::Tensor hingefern_forward(torch::Tensor inData, torch::Tensor inThresholds
 }
 
 std::vector<torch::Tensor> hingefern_backward(torch::Tensor inData, bool bInDataGrad, torch::Tensor inThresholds, bool bInThresholdsGrad, torch::Tensor inOrdinals, bool bInOrdinalsGrad, torch::Tensor inWeights, bool bInWeightsGrad, torch::Tensor outDataGrad) {
-  if (inData.dtype() != inThresholds.dtype() || inData.dtype() != inOrdinals.dtype() || inData.dtype() != inWeights.dtype() || inData.dtype() != outDataGrad.dtype())
+  if (inData.dtype() != inThresholds.dtype() || torch::kInt64 != inOrdinals.scalar_type() || inData.dtype() != inWeights.dtype() || inData.dtype() != outDataGrad.dtype())
     return std::vector<torch::Tensor>();
   
   if (inData.device() != inThresholds.device() || inData.device() != inOrdinals.device() || inData.device() != inWeights.device() || inData.device() != outDataGrad.device())
@@ -747,7 +747,7 @@ std::vector<torch::Tensor> hingefern_backward(torch::Tensor inData, bool bInData
 }
 
 std::vector<torch::Tensor> hingefern_backward_deterministic(torch::Tensor inData, bool bInDataGrad, torch::Tensor inThresholds, bool bInThresholdsGrad, torch::Tensor inOrdinals, bool bInOrdinalsGrad, torch::Tensor inWeights, bool bInWeightsGrad, torch::Tensor outDataGrad) {
-  if (inData.dtype() != inThresholds.dtype() || inData.dtype() != inOrdinals.dtype() || inData.dtype() != inWeights.dtype() || inData.dtype() != outDataGrad.dtype())
+  if (inData.dtype() != inThresholds.dtype() || torch::kInt64 != inOrdinals.scalar_type() || inData.dtype() != inWeights.dtype() || inData.dtype() != outDataGrad.dtype())
     return std::vector<torch::Tensor>();
   
   if (inData.device() != inThresholds.device() || inData.device() != inOrdinals.device() || inData.device() != inWeights.device() || inData.device() != outDataGrad.device())
@@ -787,7 +787,7 @@ std::vector<torch::Tensor> hingefern_backward_deterministic(torch::Tensor inData
 }
 
 std::vector<bool> hingetree_check_thresholds(torch::Tensor inThresholds, torch::Tensor inOrdinals, torch::Tensor inWeights) {
-  if (inThresholds.dtype() != inOrdinals.dtype() || inThresholds.dtype() != inWeights.dtype())
+  if (torch::kInt64 != inOrdinals.scalar_type() || inThresholds.dtype() != inWeights.dtype())
     return std::vector<bool>();
 
   if (inThresholds.device() != torch::kCPU || inThresholds.device() != inOrdinals.device() || inThresholds.device() != inWeights.device())
@@ -817,7 +817,7 @@ std::vector<bool> hingetree_check_thresholds(torch::Tensor inThresholds, torch::
 }
 
 std::vector<bool> hingefern_check_thresholds(torch::Tensor inThresholds, torch::Tensor inOrdinals, torch::Tensor inWeights) {
-  if (inThresholds.dtype() != inOrdinals.dtype() || inThresholds.dtype() != inWeights.dtype())
+  if (torch::kInt64 != inOrdinals.scalar_type() || inThresholds.dtype() != inWeights.dtype())
     return std::vector<bool>();
 
   if (inThresholds.device() != torch::kCPU || inThresholds.device() != inOrdinals.device() || inThresholds.device() != inWeights.device())
@@ -847,7 +847,7 @@ std::vector<bool> hingefern_check_thresholds(torch::Tensor inThresholds, torch::
 }
 
 std::vector<bool> hingetree_fix_thresholds(torch::Tensor inThresholds, torch::Tensor inOrdinals, torch::Tensor inWeights) {
-  if (inThresholds.dtype() != inOrdinals.dtype() || inThresholds.dtype() != inWeights.dtype())
+  if (torch::kInt64 != inOrdinals.scalar_type() || inThresholds.dtype() != inWeights.dtype())
     return std::vector<bool>();
 
   if (inThresholds.device() != torch::kCPU || inThresholds.device() != inOrdinals.device() || inThresholds.device() != inWeights.device())
@@ -877,7 +877,7 @@ std::vector<bool> hingetree_fix_thresholds(torch::Tensor inThresholds, torch::Te
 }
 
 std::vector<bool> hingefern_fix_thresholds(torch::Tensor inThresholds, torch::Tensor inOrdinals, torch::Tensor inWeights) {
-  if (inThresholds.dtype() != inOrdinals.dtype() || inThresholds.dtype() != inWeights.dtype())
+  if (torch::kInt64 != inOrdinals.scalar_type() || inThresholds.dtype() != inWeights.dtype())
     return std::vector<bool>();
 
   if (inThresholds.device() != torch::kCPU || inThresholds.device() != inOrdinals.device() || inThresholds.device() != inWeights.device())
@@ -907,7 +907,7 @@ std::vector<bool> hingefern_fix_thresholds(torch::Tensor inThresholds, torch::Te
 }
 
 torch::Tensor hingetree_reachability(torch::Tensor inData, torch::Tensor inThresholds, torch::Tensor inOrdinals, torch::Tensor inWeights) {
-  if (inData.dtype() != inThresholds.dtype() || inData.dtype() != inOrdinals.dtype() || inData.dtype() != inWeights.dtype())
+  if (inData.dtype() != inThresholds.dtype() || torch::kInt64 != inOrdinals.scalar_type() || inData.dtype() != inWeights.dtype())
     return torch::Tensor();
   
   if (inData.device() != inThresholds.device() || inData.device() != inOrdinals.device() || inData.device() != inWeights.device())
@@ -947,7 +947,7 @@ torch::Tensor hingetree_reachability(torch::Tensor inData, torch::Tensor inThres
 }
 
 torch::Tensor hingetree_leafmap(torch::Tensor inData, torch::Tensor inThresholds, torch::Tensor inOrdinals, torch::Tensor inWeights) {
-  if (inData.dtype() != inThresholds.dtype() || inData.dtype() != inOrdinals.dtype() || inData.dtype() != inWeights.dtype())
+  if (inData.dtype() != inThresholds.dtype() || torch::kInt64 != inOrdinals.scalar_type() || inData.dtype() != inWeights.dtype())
     return torch::Tensor();
   
   if (inData.device() != inThresholds.device() || inData.device() != inOrdinals.device() || inData.device() != inWeights.device())
@@ -987,7 +987,7 @@ torch::Tensor hingetree_leafmap(torch::Tensor inData, torch::Tensor inThresholds
 }
 
 std::vector<torch::Tensor> hingetree_marginmap(torch::Tensor inData, torch::Tensor inThresholds, torch::Tensor inOrdinals, torch::Tensor inWeights) {
-  if (inData.dtype() != inThresholds.dtype() || inData.dtype() != inOrdinals.dtype() || inData.dtype() != inWeights.dtype())
+  if (inData.dtype() != inThresholds.dtype() || torch::kInt64 != inOrdinals.scalar_type() || inData.dtype() != inWeights.dtype())
     return std::vector<torch::Tensor>();
   
   if (inData.device() != inThresholds.device() || inData.device() != inOrdinals.device() || inData.device() != inWeights.device())
@@ -1027,7 +1027,7 @@ std::vector<torch::Tensor> hingetree_marginmap(torch::Tensor inData, torch::Tens
 }
 
 torch::Tensor hingefern_reachability(torch::Tensor inData, torch::Tensor inThresholds, torch::Tensor inOrdinals, torch::Tensor inWeights) {
-  if (inData.dtype() != inThresholds.dtype() || inData.dtype() != inOrdinals.dtype() || inData.dtype() != inWeights.dtype())
+  if (inData.dtype() != inThresholds.dtype() || torch::kInt64 != inOrdinals.scalar_type() || inData.dtype() != inWeights.dtype())
     return torch::Tensor();
   
   if (inData.device() != inThresholds.device() || inData.device() != inOrdinals.device() || inData.device() != inWeights.device())
@@ -1067,7 +1067,7 @@ torch::Tensor hingefern_reachability(torch::Tensor inData, torch::Tensor inThres
 }
 
 torch::Tensor hingefern_leafmap(torch::Tensor inData, torch::Tensor inThresholds, torch::Tensor inOrdinals, torch::Tensor inWeights) {
-  if (inData.dtype() != inThresholds.dtype() || inData.dtype() != inOrdinals.dtype() || inData.dtype() != inWeights.dtype())
+  if (inData.dtype() != inThresholds.dtype() || torch::kInt64 != inOrdinals.scalar_type() || inData.dtype() != inWeights.dtype())
     return torch::Tensor();
   
   if (inData.device() != inThresholds.device() || inData.device() != inOrdinals.device() || inData.device() != inWeights.device())
@@ -1107,7 +1107,7 @@ torch::Tensor hingefern_leafmap(torch::Tensor inData, torch::Tensor inThresholds
 }
 
 std::vector<torch::Tensor> hingefern_marginmap(torch::Tensor inData, torch::Tensor inThresholds, torch::Tensor inOrdinals, torch::Tensor inWeights) {
-  if (inData.dtype() != inThresholds.dtype() || inData.dtype() != inOrdinals.dtype() || inData.dtype() != inWeights.dtype())
+  if (inData.dtype() != inThresholds.dtype() || torch::kInt64 != inOrdinals.scalar_type() || inData.dtype() != inWeights.dtype())
     return std::vector<torch::Tensor>();
   
   if (inData.device() != inThresholds.device() || inData.device() != inOrdinals.device() || inData.device() != inWeights.device())
@@ -1175,7 +1175,7 @@ torch::Tensor hingetree_speedtest(torch::Tensor inData, bool bDeterministic) {
       inThresholds -= 3.0f;
 
       torch::Tensor inWeights = torch::randn( { i64NumTrees, TreeTraitsType::GetLeafCount(i64Depth) }, clOptions);
-      torch::Tensor inOrdinals = torch::randint(0, inData.sizes()[1], { i64NumTrees, TreeTraitsType::GetThresholdCount(i64Depth) }, clOptions);
+      torch::Tensor inOrdinals = torch::randint(0, inData.sizes()[1], { i64NumTrees, TreeTraitsType::GetThresholdCount(i64Depth) }, clOptions.dtype(torch::kInt64));
 
       torch::Tensor outData;
 
@@ -1252,7 +1252,7 @@ torch::Tensor hingefern_speedtest(torch::Tensor inData, bool bDeterministic) {
       inThresholds -= 3.0f;
 
       torch::Tensor inWeights = torch::randn( { i64NumTrees, TreeTraitsType::GetLeafCount(i64Depth) }, clOptions);
-      torch::Tensor inOrdinals = torch::randint(0, inData.sizes()[1], { i64NumTrees, TreeTraitsType::GetThresholdCount(i64Depth) }, clOptions);
+      torch::Tensor inOrdinals = torch::randint(0, inData.sizes()[1], { i64NumTrees, TreeTraitsType::GetThresholdCount(i64Depth) }, clOptions.dtype(torch::kInt64));
 
       torch::Tensor outData;
 
@@ -1302,7 +1302,7 @@ torch::Tensor hingefern_speedtest(torch::Tensor inData, bool bDeterministic) {
 }
 
 bool hingetree_init_medians(torch::Tensor inData, torch::Tensor inThresholds, torch::Tensor inOrdinals, torch::Tensor inWeights) {
-  if (inData.dtype() != inThresholds.dtype() || inData.dtype() != inOrdinals.dtype() || inData.dtype() != inWeights.dtype())
+  if (inData.dtype() != inThresholds.dtype() || torch::kInt64 != inOrdinals.scalar_type() || inData.dtype() != inWeights.dtype())
     return false;
   
   if (inData.device() != torch::kCPU || inData.device() != inThresholds.device() || inData.device() != inOrdinals.device() || inData.device() != inWeights.device())
@@ -1358,7 +1358,7 @@ bool hingetree_init_medians(torch::Tensor inData, torch::Tensor inThresholds, to
 }
 
 bool hingefern_init_medians(torch::Tensor inData, torch::Tensor inThresholds, torch::Tensor inOrdinals, torch::Tensor inWeights) {
-  if (inData.dtype() != inThresholds.dtype() || inData.dtype() != inOrdinals.dtype() || inData.dtype() != inWeights.dtype())
+  if (inData.dtype() != inThresholds.dtype() || torch::kInt64 != inOrdinals.scalar_type() || inData.dtype() != inWeights.dtype())
     return false;
   
   if (inData.device() != torch::kCPU || inData.device() != inThresholds.device() || inData.device() != inOrdinals.device() || inData.device() != inWeights.device())
@@ -1414,7 +1414,7 @@ bool hingefern_init_medians(torch::Tensor inData, torch::Tensor inThresholds, to
 }
 
 bool hingetree_init_greedy(torch::Tensor inData, torch::Tensor inLabels, torch::Tensor inThresholds, torch::Tensor inOrdinals, torch::Tensor inWeights) {
-  if (inData.dtype() != inThresholds.dtype() || inData.dtype() != inOrdinals.dtype() || inData.dtype() != inWeights.dtype())
+  if (inData.dtype() != inThresholds.dtype() || torch::kInt64 != inOrdinals.scalar_type() || inData.dtype() != inWeights.dtype())
     return false;
 
   if (inLabels.scalar_type() != torch::kInt64 && inLabels.dtype() != inData.dtype()) // NOTE: The latter check is for regression
@@ -1496,22 +1496,8 @@ template<typename RealType, unsigned int Dimension, typename TreeTraitsType>
 std::vector<torch::Tensor> hingetree_conv_gpu_backward(torch::Tensor, bool, torch::Tensor, bool, torch::Tensor, bool, torch::Tensor, bool, torch::Tensor, IntArrayRef, IntArrayRef, IntArrayRef, IntArrayRef);
 
 template<unsigned int Dimension>
-torch::Tensor hingetree_conv_forward(torch::Tensor inData, torch::Tensor inThresholds, torch::Tensor inOrdinals, torch::Tensor inWeights, torch::Tensor kernelSize_, torch::Tensor stride_, torch::Tensor padding_, torch::Tensor dilation_) {
-  if (kernelSize_.scalar_type() != torch::kInt64 || kernelSize_.dtype() != stride_.dtype() || kernelSize_.dtype() != padding_.dtype() || kernelSize_.dtype() != dilation_.dtype())
-    return torch::Tensor();
-
-  if (kernelSize_.device() != torch::kCPU || kernelSize_.device() != stride_.device() || kernelSize_.device() != padding_.device() || kernelSize_.device() != dilation_.device())
-    return torch::Tensor();
-
-  if (kernelSize_.dim() != 1 || kernelSize_.dim() != stride_.dim() || kernelSize_.dim() != padding_.dim() || kernelSize_.dim() != dilation_.dim())
-    return torch::Tensor();
-
-  IntArrayRef kernelSize(kernelSize_.data_ptr<int64_t>(), kernelSize_.numel());
-  IntArrayRef stride(stride_.data_ptr<int64_t>(), stride_.numel());
-  IntArrayRef padding(padding_.data_ptr<int64_t>(), padding_.numel());
-  IntArrayRef dilation(dilation_.data_ptr<int64_t>(), dilation_.numel());
-  
-  if (inData.dtype() != inThresholds.dtype() || inData.dtype() != inOrdinals.dtype() || inData.dtype() != inWeights.dtype())
+torch::Tensor hingetree_conv_forward(torch::Tensor inData, torch::Tensor inThresholds, torch::Tensor inOrdinals, torch::Tensor inWeights, IntArrayRef kernelSize, IntArrayRef stride, IntArrayRef padding, IntArrayRef dilation) {
+  if (inData.dtype() != inThresholds.dtype() || torch::kInt64 != inOrdinals.scalar_type() || inData.dtype() != inWeights.dtype())
     return torch::Tensor();
   
   if (inData.device() != inThresholds.device() || inData.device() != inOrdinals.device() || inData.device() != inWeights.device())
@@ -1551,22 +1537,8 @@ torch::Tensor hingetree_conv_forward(torch::Tensor inData, torch::Tensor inThres
 }
 
 template<unsigned int Dimension>
-std::vector<torch::Tensor> hingetree_conv_backward(torch::Tensor inData, bool bInDataGrad, torch::Tensor inThresholds, bool bInThresholdsGrad, torch::Tensor inOrdinals, bool bInOrdinalsGrad, torch::Tensor inWeights, bool bInWeightsGrad, torch::Tensor outDataGrad, torch::Tensor kernelSize_, torch::Tensor stride_, torch::Tensor padding_, torch::Tensor dilation_) {
-  if (kernelSize_.scalar_type() != torch::kInt64 || kernelSize_.dtype() != stride_.dtype() || kernelSize_.dtype() != padding_.dtype() || kernelSize_.dtype() != dilation_.dtype())
-    return std::vector<torch::Tensor>();
-
-  if (kernelSize_.device() != torch::kCPU || kernelSize_.device() != stride_.device() || kernelSize_.device() != padding_.device() || kernelSize_.device() != dilation_.device())
-    return std::vector<torch::Tensor>();
-
-  if (kernelSize_.dim() != 1 || kernelSize_.dim() != stride_.dim() || kernelSize_.dim() != padding_.dim() || kernelSize_.dim() != dilation_.dim())
-    return std::vector<torch::Tensor>();
-
-  IntArrayRef kernelSize(kernelSize_.data_ptr<int64_t>(), kernelSize_.numel());
-  IntArrayRef stride(stride_.data_ptr<int64_t>(), stride_.numel());
-  IntArrayRef padding(padding_.data_ptr<int64_t>(), padding_.numel());
-  IntArrayRef dilation(dilation_.data_ptr<int64_t>(), dilation_.numel());
-
-  if (inData.dtype() != inThresholds.dtype() || inData.dtype() != inOrdinals.dtype() || inData.dtype() != inWeights.dtype() || inData.dtype() != outDataGrad.dtype())
+std::vector<torch::Tensor> hingetree_conv_backward(torch::Tensor inData, bool bInDataGrad, torch::Tensor inThresholds, bool bInThresholdsGrad, torch::Tensor inOrdinals, bool bInOrdinalsGrad, torch::Tensor inWeights, bool bInWeightsGrad, torch::Tensor outDataGrad, IntArrayRef kernelSize, IntArrayRef stride, IntArrayRef padding, IntArrayRef dilation) {
+  if (inData.dtype() != inThresholds.dtype() || torch::kInt64 != inOrdinals.scalar_type() || inData.dtype() != inWeights.dtype() || inData.dtype() != outDataGrad.dtype())
     return std::vector<torch::Tensor>();
   
   if (inData.device() != inThresholds.device() || inData.device() != inOrdinals.device() || inData.device() != inWeights.device() || inData.device() != outDataGrad.device())
@@ -1606,22 +1578,8 @@ std::vector<torch::Tensor> hingetree_conv_backward(torch::Tensor inData, bool bI
 }
 
 template<unsigned int Dimension>
-torch::Tensor hingefern_conv_forward(torch::Tensor inData, torch::Tensor inThresholds, torch::Tensor inOrdinals, torch::Tensor inWeights, torch::Tensor kernelSize_, torch::Tensor stride_, torch::Tensor padding_, torch::Tensor dilation_) {
-  if (kernelSize_.scalar_type() != torch::kInt64 || kernelSize_.dtype() != stride_.dtype() || kernelSize_.dtype() != padding_.dtype() || kernelSize_.dtype() != dilation_.dtype())
-    return torch::Tensor();
-
-  if (kernelSize_.device() != torch::kCPU || kernelSize_.device() != stride_.device() || kernelSize_.device() != padding_.device() || kernelSize_.device() != dilation_.device())
-    return torch::Tensor();
-
-  if (kernelSize_.dim() != 1 || kernelSize_.dim() != stride_.dim() || kernelSize_.dim() != padding_.dim() || kernelSize_.dim() != dilation_.dim())
-    return torch::Tensor();
-
-  IntArrayRef kernelSize(kernelSize_.data_ptr<int64_t>(), kernelSize_.numel());
-  IntArrayRef stride(stride_.data_ptr<int64_t>(), stride_.numel());
-  IntArrayRef padding(padding_.data_ptr<int64_t>(), padding_.numel());
-  IntArrayRef dilation(dilation_.data_ptr<int64_t>(), dilation_.numel());
-  
-  if (inData.dtype() != inThresholds.dtype() || inData.dtype() != inOrdinals.dtype() || inData.dtype() != inWeights.dtype())
+torch::Tensor hingefern_conv_forward(torch::Tensor inData, torch::Tensor inThresholds, torch::Tensor inOrdinals, torch::Tensor inWeights, IntArrayRef kernelSize, IntArrayRef stride, IntArrayRef padding, IntArrayRef dilation) {
+  if (inData.dtype() != inThresholds.dtype() || torch::kInt64 != inOrdinals.scalar_type() || inData.dtype() != inWeights.dtype())
     return torch::Tensor();
   
   if (inData.device() != inThresholds.device() || inData.device() != inOrdinals.device() || inData.device() != inWeights.device())
@@ -1661,22 +1619,8 @@ torch::Tensor hingefern_conv_forward(torch::Tensor inData, torch::Tensor inThres
 }
 
 template<unsigned int Dimension>
-std::vector<torch::Tensor> hingefern_conv_backward(torch::Tensor inData, bool bInDataGrad, torch::Tensor inThresholds, bool bInThresholdsGrad, torch::Tensor inOrdinals, bool bInOrdinalsGrad, torch::Tensor inWeights, bool bInWeightsGrad, torch::Tensor outDataGrad, torch::Tensor kernelSize_, torch::Tensor stride_, torch::Tensor padding_, torch::Tensor dilation_) {
-  if (kernelSize_.scalar_type() != torch::kInt64 || kernelSize_.dtype() != stride_.dtype() || kernelSize_.dtype() != padding_.dtype() || kernelSize_.dtype() != dilation_.dtype())
-    return std::vector<torch::Tensor>();
-
-  if (kernelSize_.device() != torch::kCPU || kernelSize_.device() != stride_.device() || kernelSize_.device() != padding_.device() || kernelSize_.device() != dilation_.device())
-    return std::vector<torch::Tensor>();
-
-  if (kernelSize_.dim() != 1 || kernelSize_.dim() != stride_.dim() || kernelSize_.dim() != padding_.dim() || kernelSize_.dim() != dilation_.dim())
-    return std::vector<torch::Tensor>();
-
-  IntArrayRef kernelSize(kernelSize_.data_ptr<int64_t>(), kernelSize_.numel());
-  IntArrayRef stride(stride_.data_ptr<int64_t>(), stride_.numel());
-  IntArrayRef padding(padding_.data_ptr<int64_t>(), padding_.numel());
-  IntArrayRef dilation(dilation_.data_ptr<int64_t>(), dilation_.numel());
-
-  if (inData.dtype() != inThresholds.dtype() || inData.dtype() != inOrdinals.dtype() || inData.dtype() != inWeights.dtype() || inData.dtype() != outDataGrad.dtype())
+std::vector<torch::Tensor> hingefern_conv_backward(torch::Tensor inData, bool bInDataGrad, torch::Tensor inThresholds, bool bInThresholdsGrad, torch::Tensor inOrdinals, bool bInOrdinalsGrad, torch::Tensor inWeights, bool bInWeightsGrad, torch::Tensor outDataGrad, IntArrayRef kernelSize, IntArrayRef stride, IntArrayRef padding, IntArrayRef dilation) {
+  if (inData.dtype() != inThresholds.dtype() || torch::kInt64 != inOrdinals.scalar_type() || inData.dtype() != inWeights.dtype() || inData.dtype() != outDataGrad.dtype())
     return std::vector<torch::Tensor>();
   
   if (inData.device() != inThresholds.device() || inData.device() != inOrdinals.device() || inData.device() != inWeights.device() || inData.device() != outDataGrad.device())
@@ -1722,8 +1666,8 @@ bool hingetrie_init_medians(torch::Tensor inData, torch::Tensor inThresholds, to
 torch::Tensor hingetree_fused_linear_forward(torch::Tensor inData, torch::Tensor inThresholds, torch::Tensor inOrdinals, torch::Tensor inWeights, torch::Tensor inLinearWeights, torch::Tensor inLinearBias);
 std::vector<torch::Tensor> hingetree_fused_linear_backward(torch::Tensor inData, bool bInDataGrad, torch::Tensor inThresholds, bool bInThresholdsGrad, torch::Tensor inOrdinals, bool bInOrdinalsGrad, torch::Tensor inWeights, bool bInWeightsGrad, torch::Tensor inLinearWeights, bool bInLinearWeightsGrad, torch::Tensor inLinearBias, bool bInLinearBiasGrad, torch::Tensor outDataGrad);
 
-torch::Tensor contract(torch::Tensor inData, const std::vector<int64_t> &vWindow, const std::vector<int64_t> &vPadding);
-torch::Tensor expand(torch::Tensor inData, const std::vector<int64_t> &vPadding);
+torch::Tensor contract(torch::Tensor inData, IntArrayRef window, IntArrayRef padding);
+torch::Tensor expand(torch::Tensor inData, IntArrayRef padding);
 
 PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
   m.def("tree_forward", &hingetree_forward, "Hinge tree forward.");

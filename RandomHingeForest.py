@@ -45,9 +45,9 @@ class RandomHingeForest(nn.Module):
         thresholds = 6.0*torch.rand([out_channels, 2**depth - 1]) - 3.0
 
         if init_type == "random":
-            ordinals = torch.randint_like(thresholds, low=0, high=in_channels)
+            ordinals = torch.randint_like(thresholds, low=0, high=in_channels, dtype=torch.long)
         elif init_type == "sequential":
-            ordinals = torch.arange(thresholds.numel(), dtype=thresholds.dtype)
+            ordinals = torch.arange(thresholds.numel(), dtype=torch.long)
             ordinals -= in_channels * (ordinals // in_channels)
             ordinals = torch.reshape(ordinals, thresholds.shape)
         else:
@@ -131,12 +131,8 @@ class RandomHingeForest(nn.Module):
     def load_state_dict(self, *args, **kwargs):
         super(RandomHingeForest, self).load_state_dict(*args, **kwargs)
 
-        # NOTE: All of this gets redundantly checked in the C++ code... but the C++ code provides no error messages!
-        if self.thresholds.dim() != 2 or (self.thresholds.shape[1] & (self.thresholds.shape[1]+1)) != 0 or self.thresholds.shape != self.ordinals.shape:
-            raise RuntimeError("Unexpected threshold/ordinal shapes.")
-
-        if self.weights.dim() < 2 or self.weights.shape[0] != self.thresholds.shape[0] or self.weights.shape[1] != self.thresholds.shape[1]+1:
-            raise RuntimeError("Unexpected weight shape.")
+        # For compatibility
+        self.ordinals = self.ordinals.type(torch.long)
 
 class RandomHingeFern(nn.Module):
     __constants__ = [ "in_channels", "out_channels", "depth", "extra_outputs", "init_type" ]
@@ -160,9 +156,9 @@ class RandomHingeFern(nn.Module):
         thresholds = 6.0*torch.rand([out_channels, depth]) - 3.0
 
         if init_type == "random":
-            ordinals = torch.randint_like(thresholds, low=0, high=in_channels)
+            ordinals = torch.randint_like(thresholds, low=0, high=in_channels, dtype=torch.long)
         elif init_type == "sequential":
-            ordinals = torch.arange(thresholds.numel(), dtype=thresholds.dtype)
+            ordinals = torch.arange(thresholds.numel(), dtype=torch.long)
             ordinals -= in_channels * (ordinals // in_channels)
             ordinals = torch.reshape(ordinals, thresholds.shape)
         else:
@@ -224,12 +220,8 @@ class RandomHingeFern(nn.Module):
     def load_state_dict(self, *args, **kwargs):
         super(RandomHingeFern, self).load_state_dict(*args, **kwargs)
 
-        # NOTE: All of this gets redundantly checked in the C++ code... but the C++ code provides no error messages!
-        if self.thresholds.dim() != 2 or self.thresholds.shape != self.ordinals.shape:
-            raise RuntimeError("Unexpected threshold/ordinal shapes.")
-
-        if self.weights.dim() < 2 or self.weights.shape[0] != self.thresholds.shape[0] or self.weights.shape[1] != 2**self.thresholds.shape[1]:
-            raise RuntimeError("Unexpected weight shape.")
+        # For compatibility
+        self.ordinals = self.ordinals.type(torch.long)
 
 class RandomHingeTrie(nn.Module):
     __constants__ = [ "in_channels", "out_channels", "depth", "extra_outputs", "deterministic", "init_type" ]
@@ -255,9 +247,9 @@ class RandomHingeTrie(nn.Module):
         thresholds = 6.0*torch.rand([out_channels, 2**depth - 1]) - 3.0
 
         if init_type == "random":
-            ordinals = torch.randint_like(thresholds, low=0, high=in_channels)
+            ordinals = torch.randint_like(thresholds, low=0, high=in_channels, dtype=torch.long)
         elif init_type == "sequential":
-            ordinals = torch.arange(thresholds.numel(), dtype=thresholds.dtype)
+            ordinals = torch.arange(thresholds.numel(), dtype=torch.long)
             ordinals -= in_channels * (ordinals // in_channels)
             ordinals = torch.reshape(ordinals, thresholds.shape)
         else:
@@ -283,12 +275,8 @@ class RandomHingeTrie(nn.Module):
     def load_state_dict(self, *args, **kwargs):
         super(RandomHingeForest, self).load_state_dict(*args, **kwargs)
 
-        # NOTE: All of this gets redundantly checked in the C++ code... but the C++ code provides no error messages!
-        if self.thresholds.dim() != 2 or (self.thresholds.shape[1] & (self.thresholds.shape[1]+1)) != 0 or self.thresholds.shape != self.ordinals.shape:
-            raise RuntimeError("Unexpected threshold/ordinal shapes.")
-
-        if self.weights.dim() < 2 or self.weights.shape[0] != self.thresholds.shape[0] or self.weights.shape[1] != self.thresholds.shape[1]:
-            raise RuntimeError("Unexpected weight shape.")
+        # For compatibility
+        self.ordinals = self.ordinals.type(torch.long)
 
 class RandomHingeForestFusedLinear(RandomHingeForest):
     def __init__(self, in_channels: int, number_of_trees: int, out_channels: int, depth: int, extra_outputs = None, init_type: str = "random", bias: bool = True):

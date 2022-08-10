@@ -166,108 +166,138 @@ class HingeTreeFusedLinear(HingeTree):
 class HingeTreeConv1d(torch.autograd.Function):
     @staticmethod
     def forward(ctx, inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation):
-        ctx.save_for_backward(inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation)
+        ctx.save_for_backward(inData, inThresholds, inOrdinals, inWeights)
 
-        return hingetree_cpp.tree_conv1d_forward(inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation)
+        ctx.kernelSize = kernelSize
+        ctx.stride = stride
+        ctx.padding = padding
+        ctx.dilation = dilation
+
+        return hingetree_cpp.tree_conv1d_forward(inData, inThresholds, inOrdinals, inWeights, ctx.kernelSize, ctx.stride, ctx.padding, ctx.dilation)
 
     @staticmethod
     def backward(ctx, outDataGrad):
         if _is_deterministic() and outDataGrad.device.type != "cpu":
             raise RuntimeError("No deterministic implementation of backpropagation for hinge tree convolution on GPUs.")
     
-        inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation = ctx.saved_tensors
+        inData, inThresholds, inOrdinals, inWeights = ctx.saved_tensors
 
-        inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad = hingetree_cpp.tree_conv1d_backward(inData, ctx.needs_input_grad[0], inThresholds, ctx.needs_input_grad[1], inOrdinals, ctx.needs_input_grad[2], inWeights, ctx.needs_input_grad[3], outDataGrad.contiguous(), kernelSize, stride, padding, dilation)
+        inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad = hingetree_cpp.tree_conv1d_backward(inData, ctx.needs_input_grad[0], inThresholds, ctx.needs_input_grad[1], inOrdinals, ctx.needs_input_grad[2], inWeights, ctx.needs_input_grad[3], outDataGrad.contiguous(), ctx.kernelSize, ctx.stride, ctx.padding, ctx.dilation)
 
         return inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad, None, None, None, None
 
 class HingeTreeConv2d(torch.autograd.Function):
     @staticmethod
     def forward(ctx, inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation):
-        ctx.save_for_backward(inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation)
+        ctx.save_for_backward(inData, inThresholds, inOrdinals, inWeights)
 
-        return hingetree_cpp.tree_conv2d_forward(inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation)
+        ctx.kernelSize = kernelSize
+        ctx.stride = stride
+        ctx.padding = padding
+        ctx.dilation = dilation
+
+        return hingetree_cpp.tree_conv2d_forward(inData, inThresholds, inOrdinals, inWeights, ctx.kernelSize, ctx.stride, ctx.padding, ctx.dilation)
 
     @staticmethod
     def backward(ctx, outDataGrad):
         if _is_deterministic() and outDataGrad.device.type != "cpu":
             raise RuntimeError("No deterministic implementation of backpropagation for hinge tree convolution on GPUs.")
     
-        inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation = ctx.saved_tensors
+        inData, inThresholds, inOrdinals, inWeights = ctx.saved_tensors
 
-        inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad = hingetree_cpp.tree_conv2d_backward(inData, ctx.needs_input_grad[0], inThresholds, ctx.needs_input_grad[1], inOrdinals, ctx.needs_input_grad[2], inWeights, ctx.needs_input_grad[3], outDataGrad.contiguous(), kernelSize, stride, padding, dilation)
+        inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad = hingetree_cpp.tree_conv2d_backward(inData, ctx.needs_input_grad[0], inThresholds, ctx.needs_input_grad[1], inOrdinals, ctx.needs_input_grad[2], inWeights, ctx.needs_input_grad[3], outDataGrad.contiguous(), ctx.kernelSize, ctx.stride, ctx.padding, ctx.dilation)
 
         return inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad, None, None, None, None
 
 class HingeTreeConv3d(torch.autograd.Function):
     @staticmethod
     def forward(ctx, inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation):
-        ctx.save_for_backward(inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation)
+        ctx.save_for_backward(inData, inThresholds, inOrdinals, inWeights)
 
-        return hingetree_cpp.tree_conv3d_forward(inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation)
+        ctx.kernelSize = kernelSize
+        ctx.stride = stride
+        ctx.padding = padding
+        ctx.dilation = dilation
+
+        return hingetree_cpp.tree_conv3d_forward(inData, inThresholds, inOrdinals, inWeights, ctx.kernelSize, ctx.stride, ctx.padding, ctx.dilation)
 
     @staticmethod
     def backward(ctx, outDataGrad):
         if _is_deterministic() and outDataGrad.device.type != "cpu":
             raise RuntimeError("No deterministic implementation of backpropagation for hinge tree convolution on GPUs.")
     
-        inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation = ctx.saved_tensors
+        inData, inThresholds, inOrdinals, inWeights = ctx.saved_tensors
 
-        inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad = hingetree_cpp.tree_conv3d_backward(inData, ctx.needs_input_grad[0], inThresholds, ctx.needs_input_grad[1], inOrdinals, ctx.needs_input_grad[2], inWeights, ctx.needs_input_grad[3], outDataGrad.contiguous(), kernelSize, stride, padding, dilation)
+        inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad = hingetree_cpp.tree_conv3d_backward(inData, ctx.needs_input_grad[0], inThresholds, ctx.needs_input_grad[1], inOrdinals, ctx.needs_input_grad[2], inWeights, ctx.needs_input_grad[3], outDataGrad.contiguous(), ctx.kernelSize, ctx.stride, ctx.padding, ctx.dilation)
 
         return inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad, None, None, None, None
 
 class HingeFernConv1d(torch.autograd.Function):
     @staticmethod
     def forward(ctx, inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation):
-        ctx.save_for_backward(inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation)
+        ctx.save_for_backward(inData, inThresholds, inOrdinals, inWeights)
 
-        return hingetree_cpp.fern_conv1d_forward(inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation)
+        ctx.kernelSize = kernelSize
+        ctx.stride = stride
+        ctx.padding = padding
+        ctx.dilation = dilation
+
+        return hingetree_cpp.fern_conv1d_forward(inData, inThresholds, inOrdinals, inWeights, ctx.kernelSize, ctx.stride, ctx.padding, ctx.dilation)
 
     @staticmethod
     def backward(ctx, outDataGrad):
         if _is_deterministic() and outDataGrad.device.type != "cpu":
             raise RuntimeError("No deterministic implementation of backpropagation for hinge fern convolution on GPUs.")
     
-        inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation = ctx.saved_tensors
+        inData, inThresholds, inOrdinals, inWeights = ctx.saved_tensors
 
-        inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad = hingetree_cpp.fern_conv1d_backward(inData, ctx.needs_input_grad[0], inThresholds, ctx.needs_input_grad[1], inOrdinals, ctx.needs_input_grad[2], inWeights, ctx.needs_input_grad[3], outDataGrad.contiguous(), kernelSize, stride, padding, dilation)
+        inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad = hingetree_cpp.fern_conv1d_backward(inData, ctx.needs_input_grad[0], inThresholds, ctx.needs_input_grad[1], inOrdinals, ctx.needs_input_grad[2], inWeights, ctx.needs_input_grad[3], outDataGrad.contiguous(), ctx.kernelSize, ctx.stride, ctx.padding, ctx.dilation)
 
         return inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad, None, None, None, None
 
 class HingeFernConv2d(torch.autograd.Function):
     @staticmethod
     def forward(ctx, inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation):
-        ctx.save_for_backward(inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation)
+        ctx.save_for_backward(inData, inThresholds, inOrdinals, inWeights)
 
-        return hingetree_cpp.fern_conv2d_forward(inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation)
+        ctx.kernelSize = kernelSize
+        ctx.stride = stride
+        ctx.padding = padding
+        ctx.dilation = dilation
+
+        return hingetree_cpp.fern_conv2d_forward(inData, inThresholds, inOrdinals, inWeights, ctx.kernelSize, ctx.stride, ctx.padding, ctx.dilation)
 
     @staticmethod
     def backward(ctx, outDataGrad):
         if _is_deterministic() and outDataGrad.device.type != "cpu":
             raise RuntimeError("No deterministic implementation of backpropagation for hinge fern convolution on GPUs.")
         
-        inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation = ctx.saved_tensors
+        inData, inThresholds, inOrdinals, inWeights = ctx.saved_tensors
         
-        inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad = hingetree_cpp.fern_conv2d_backward(inData, ctx.needs_input_grad[0], inThresholds, ctx.needs_input_grad[1], inOrdinals, ctx.needs_input_grad[2], inWeights, ctx.needs_input_grad[3], outDataGrad.contiguous(), kernelSize, stride, padding, dilation)
+        inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad = hingetree_cpp.fern_conv2d_backward(inData, ctx.needs_input_grad[0], inThresholds, ctx.needs_input_grad[1], inOrdinals, ctx.needs_input_grad[2], inWeights, ctx.needs_input_grad[3], outDataGrad.contiguous(), ctx.kernelSize, ctx.stride, ctx.padding, ctx.dilation)
 
         return inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad, None, None, None, None
 
 class HingeFernConv3d(torch.autograd.Function):
     @staticmethod
     def forward(ctx, inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation):
-        ctx.save_for_backward(inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation)
+        ctx.save_for_backward(inData, inThresholds, inOrdinals, inWeights)
 
-        return hingetree_cpp.fern_conv3d_forward(inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation)
+        ctx.kernelSize = kernelSize
+        ctx.stride = stride
+        ctx.padding = padding
+        ctx.dilation = dilation
+
+        return hingetree_cpp.fern_conv3d_forward(inData, inThresholds, inOrdinals, inWeights, ctx.kernelSize, ctx.stride, ctx.padding, ctx.dilation)
 
     @staticmethod
     def backward(ctx, outDataGrad):
         if _is_deterministic() and outDataGrad.device.type != "cpu":
             raise RuntimeError("No deterministic implementation of backpropagation for hinge fern convolution on GPUs.")
         
-        inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation = ctx.saved_tensors
+        inData, inThresholds, inOrdinals, inWeights = ctx.saved_tensors
         
-        inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad = hingetree_cpp.fern_conv3d_backward(inData, ctx.needs_input_grad[0], inThresholds, ctx.needs_input_grad[1], inOrdinals, ctx.needs_input_grad[2], inWeights, ctx.needs_input_grad[3], outDataGrad.contiguous(), kernelSize, stride, padding, dilation)
+        inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad = hingetree_cpp.fern_conv3d_backward(inData, ctx.needs_input_grad[0], inThresholds, ctx.needs_input_grad[1], inOrdinals, ctx.needs_input_grad[2], inWeights, ctx.needs_input_grad[3], outDataGrad.contiguous(), ctx.kernelSize, ctx.stride, ctx.padding, ctx.dilation)
 
         return inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad, None, None, None, None
 

@@ -87,7 +87,7 @@ torch::Tensor hingetree_conv_cpu_forward(torch::Tensor inData, torch::Tensor inT
 
   const int64_t i64KernelCount = clImageToMatrix.ComputeKernelCount();
 
-  if (inOrdinals.min().item<RealType>() < RealType(0) || inOrdinals.max().item<RealType>() >= RealType(i64KernelCount))
+  if (inOrdinals.min().item<int64_t>() < 0 || inOrdinals.max().item<int64_t>() >= i64KernelCount)
     return torch::Tensor();
 
   const int64_t i64NumLeavesPerTree = inWeights.sizes()[2];
@@ -168,7 +168,7 @@ torch::Tensor hingetree_conv_cpu_forward(torch::Tensor inData, torch::Tensor inT
 
   const RealType * const p_inData = inData.data_ptr<RealType>();
   const RealType * const p_inThresholds = inThresholds.data_ptr<RealType>();
-  const RealType * const p_inOrdinals = inOrdinals.data_ptr<RealType>();
+  const int64_t * const p_inOrdinals = inOrdinals.data_ptr<int64_t>();
   const RealType * const p_inWeights = inWeights.data_ptr<RealType>();
 
   for (int64_t i = 0; i < i64BatchSize; ++i) {
@@ -178,7 +178,7 @@ torch::Tensor hingetree_conv_cpu_forward(torch::Tensor inData, torch::Tensor inT
 
         for (int64_t j = 0; j < i64OutChannels; ++j) {
           const RealType * const p_thresholds = p_inThresholds + ((g*i64OutChannels + j)*i64InChannels + c)*i64NumDecisionsPerTree;
-          const RealType * const p_ordinals = p_inOrdinals + ((g*i64OutChannels + j)*i64InChannels + c)*i64NumDecisionsPerTree;
+          const int64_t * const p_ordinals = p_inOrdinals + ((g*i64OutChannels + j)*i64InChannels + c)*i64NumDecisionsPerTree;
 
           for (int64_t k = 0; k < i64Rows; ++k) {
             const RealType * const p_row = p_featureMatrix + k*i64Cols;
@@ -245,7 +245,7 @@ std::vector<torch::Tensor> hingetree_conv_cpu_backward(torch::Tensor inData, boo
 
   const int64_t i64KernelCount = clImageToMatrix.ComputeKernelCount();
 
-  if (inOrdinals.min().item<RealType>() < RealType(0) || inOrdinals.max().item<RealType>() >= RealType(i64KernelCount))
+  if (inOrdinals.min().item<int64_t>() < 0 || inOrdinals.max().item<int64_t>() >= i64KernelCount)
     return std::vector<torch::Tensor>();
 
   const int64_t i64NumLeavesPerTree = inWeights.sizes()[2];
@@ -322,7 +322,7 @@ std::vector<torch::Tensor> hingetree_conv_cpu_backward(torch::Tensor inData, boo
 
   const RealType * const p_inData = inData.data_ptr<RealType>();
   const RealType * const p_inThresholds = inThresholds.data_ptr<RealType>();
-  const RealType * const p_inOrdinals = inOrdinals.data_ptr<RealType>();
+  const int64_t * const p_inOrdinals = inOrdinals.data_ptr<int64_t>();
   const RealType * const p_inWeights = inWeights.data_ptr<RealType>();
 
   //auto clOptions = torch::TensorOptions().dtype(inData.dtype()).device(inData.device());
@@ -339,7 +339,7 @@ std::vector<torch::Tensor> hingetree_conv_cpu_backward(torch::Tensor inData, boo
 
           for (int64_t j = 0; j < i64OutChannels; ++j) {
             const RealType * const p_thresholds = p_inThresholds + ((g*i64OutChannels + j)*i64InChannels + c)*i64NumDecisionsPerTree;
-            const RealType * const p_ordinals = p_inOrdinals + ((g*i64OutChannels + j)*i64InChannels + c)*i64NumDecisionsPerTree;
+            const int64_t * const p_ordinals = p_inOrdinals + ((g*i64OutChannels + j)*i64InChannels + c)*i64NumDecisionsPerTree;
 
             for (int64_t k = 0; k < i64Rows; ++k) {
               const int64_t * const p_indexRow = p_indexMatrix + k*i64Cols;
@@ -350,7 +350,7 @@ std::vector<torch::Tensor> hingetree_conv_cpu_backward(torch::Tensor inData, boo
               const KeyType key = std::get<0>(clKeyMarginTuple);
               const RealType signedMargin = std::get<1>(clKeyMarginTuple);
               const KeyType thresholdIndex = std::get<2>(clKeyMarginTuple);
-              const int64_t i64FeatureIndex = (int64_t)p_ordinals[thresholdIndex];
+              const int64_t i64FeatureIndex = p_ordinals[thresholdIndex];
               const int64_t i64ImageIndex = p_indexRow[i64FeatureIndex];
 
               const RealType sign = RealType((RealType(0) < signedMargin) - (signedMargin < RealType(0)));
@@ -383,7 +383,7 @@ std::vector<torch::Tensor> hingetree_conv_cpu_backward(torch::Tensor inData, boo
 
           for (int64_t j = 0; j < i64OutChannels; ++j) {
             const RealType * const p_thresholds = p_inThresholds + ((g*i64OutChannels + j)*i64InChannels + c)*i64NumDecisionsPerTree;
-            const RealType * const p_ordinals = p_inOrdinals + ((g*i64OutChannels + j)*i64InChannels + c)*i64NumDecisionsPerTree;
+            const int64_t * const p_ordinals = p_inOrdinals + ((g*i64OutChannels + j)*i64InChannels + c)*i64NumDecisionsPerTree;
 
             for (int64_t k = 0; k < i64Rows; ++k) {
               const RealType * const p_row = p_featureMatrix + k*i64Cols;
@@ -421,7 +421,7 @@ std::vector<torch::Tensor> hingetree_conv_cpu_backward(torch::Tensor inData, boo
 
           for (int64_t j = 0; j < i64OutChannels; ++j) {
             const RealType * const p_thresholds = p_inThresholds + ((g*i64OutChannels + j)*i64InChannels + c)*i64NumDecisionsPerTree;
-            const RealType * const p_ordinals = p_inOrdinals + ((g*i64OutChannels + j)*i64InChannels + c)*i64NumDecisionsPerTree;
+            const int64_t * const p_ordinals = p_inOrdinals + ((g*i64OutChannels + j)*i64InChannels + c)*i64NumDecisionsPerTree;
 
             for (int64_t k = 0; k < i64Rows; ++k) {
               const RealType * const p_row = p_featureMatrix + k*i64Cols;

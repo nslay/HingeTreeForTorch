@@ -69,13 +69,13 @@ public:
   static int64_t GetLeafCount(int64_t i64TreeDepth) { return ((int64_t)1) << i64TreeDepth; }
 
   // Returns leaf key, signed margin and threshold/ordinal index
-  static KeyMarginTupleType ComputeKeyAndSignedMargin(const RealType *p_data, const RealType *p_thresholds, const RealType *p_ordinals, int64_t i64TreeDepth, int64_t i64Stride = 1) {
+  static KeyMarginTupleType ComputeKeyAndSignedMargin(const RealType *p_data, const RealType *p_thresholds, const int64_t *p_ordinals, int64_t i64TreeDepth, int64_t i64Stride = 1) {
     KeyType leafKey = KeyType();
-    RealType minMargin = p_data[i64Stride*(int64_t)p_ordinals[0]] - p_thresholds[0];
+    RealType minMargin = p_data[i64Stride*p_ordinals[0]] - p_thresholds[0];
     KeyType minFernIndex = 0;
 
     for (int64_t i = 0; i < i64TreeDepth; ++i) {
-      const int64_t j = (int64_t)p_ordinals[i];
+      const int64_t j = p_ordinals[i];
       const RealType margin = p_data[i64Stride*j] - p_thresholds[i];
       const KeyType bit = (margin > RealType(0));
 
@@ -91,10 +91,10 @@ public:
   }
 
   // Check if thresholds are logically consistent
-  static bool CheckThresholds(const RealType * /*p_thresholds*/, const RealType * /*p_ordinals*/, int64_t /*i64TreeDepth*/) { return true; } // Nothing to do since order of decisions does not matter
+  static bool CheckThresholds(const RealType * /*p_thresholds*/, const int64_t * /*p_ordinals*/, int64_t /*i64TreeDepth*/) { return true; } // Nothing to do since order of decisions does not matter
 
   // Checks and fixes logical consistency of thresholds... returns true if changes were made
-  static bool FixThresholds(RealType * /*p_thresholds*/, const RealType * /*p_ordinals*/, int64_t /*i64TreeDepth*/) { return false; } // Nothing to do since order of decisions does not matter
+  static bool FixThresholds(RealType * /*p_thresholds*/, const int64_t * /*p_ordinals*/, int64_t /*i64TreeDepth*/) { return false; } // Nothing to do since order of decisions does not matter
 };
 
 template<typename RealTypeT, typename KeyTypeT = uint32_t>
@@ -125,14 +125,14 @@ public:
   static int64_t GetLeafCount(int64_t i64TreeDepth) { return ((int64_t)1) << i64TreeDepth; }
 
   // Returns leaf key, signed margin and threshold/ordinal index
-  static KeyMarginTupleType ComputeKeyAndSignedMargin(const RealType *p_data, const RealType *p_thresholds, const RealType *p_ordinals, int64_t i64TreeDepth, int64_t i64Stride = 1) {
+  static KeyMarginTupleType ComputeKeyAndSignedMargin(const RealType *p_data, const RealType *p_thresholds, const int64_t *p_ordinals, int64_t i64TreeDepth, int64_t i64Stride = 1) {
     KeyType leafKey = KeyType();
     KeyType treeIndex = KeyType();
-    RealType minMargin = p_data[i64Stride * (int64_t)p_ordinals[0]] - p_thresholds[0];
+    RealType minMargin = p_data[i64Stride * p_ordinals[0]] - p_thresholds[0];
     KeyType minTreeIndex = KeyType();
 
     for (int64_t i = 0; i < i64TreeDepth; ++i) {
-      const int64_t j = (int64_t)p_ordinals[treeIndex];
+      const int64_t j = p_ordinals[treeIndex];
       const RealType margin = p_data[j*i64Stride] - p_thresholds[treeIndex];
       const KeyType bit = (margin > RealType(0));
 
@@ -148,17 +148,17 @@ public:
     return std::make_tuple(leafKey, minMargin, minTreeIndex);
   }
 
-  static bool CheckThresholds(const RealType *p_thresholds, const RealType *p_ordinals, int64_t i64TreeDepth) {
+  static bool CheckThresholds(const RealType *p_thresholds, const int64_t *p_ordinals, int64_t i64TreeDepth) {
     const int64_t i64ThresholdCount = GetThresholdCount(i64TreeDepth);
 
     for (int64_t i = i64ThresholdCount-1; i > 0; --i) {
-      const int64_t i64Ordinal = (int64_t)p_ordinals[i];
+      const int64_t i64Ordinal = p_ordinals[i];
       int64_t i64Node = i;
 
       while (i64Node > 0) {
         const int64_t i64Parent = (i64Node-1)/2;
         const bool bCameFromRight = (2*i64Parent+2 == i64Node);
-        const int64_t i64ParentOrdinal = (int64_t)p_ordinals[i64Parent];
+        const int64_t i64ParentOrdinal = p_ordinals[i64Parent];
 
         if (i64Ordinal == i64ParentOrdinal) {
           if (bCameFromRight) {
@@ -181,14 +181,14 @@ public:
   }
 
   // Checks and fixes logical consistency of thresholds
-  static bool FixThresholds(RealType *p_thresholds, const RealType *p_ordinals, int64_t i64TreeDepth) {
+  static bool FixThresholds(RealType *p_thresholds, const int64_t *p_ordinals, int64_t i64TreeDepth) {
     //constexpr RealType small = RealType(1e-1);
     const int64_t i64ThresholdCount = GetThresholdCount(i64TreeDepth);
 
     bool bChangesMade = false;
 
     for (int64_t i = 1; i < i64ThresholdCount; ++i) {
-      const int64_t i64Ordinal = (int64_t)p_ordinals[i];
+      const int64_t i64Ordinal = p_ordinals[i];
       int64_t i64Node = i;
 
       RealType minThreshold = -std::numeric_limits<RealType>::infinity();
@@ -197,7 +197,7 @@ public:
       while (i64Node > 0) {
         const int64_t i64Parent = (i64Node-1)/2;
         const bool bCameFromRight = (2*i64Parent+2 == i64Node);
-        const int64_t i64ParentOrdinal = (int64_t)p_ordinals[i64Parent];
+        const int64_t i64ParentOrdinal = p_ordinals[i64Parent];
 
         if (i64Ordinal == i64ParentOrdinal) {
           if (bCameFromRight)

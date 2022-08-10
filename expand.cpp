@@ -278,8 +278,8 @@ torch::Tensor expand3d_cpu(torch::Tensor inData, const int64_t a_i64Padding[2]) 
   return outData;
 }
 
-torch::Tensor contract(torch::Tensor inData, const std::vector<int64_t> &vWindow, const std::vector<int64_t> &vPadding) {
-  if (vWindow.empty() || vWindow.size() != vPadding.size())
+torch::Tensor contract(torch::Tensor inData, IntArrayRef window, IntArrayRef padding) {
+  if (window.empty() || window.size() != padding.size())
     return torch::Tensor();
 
   if (inData.device() != torch::kCPU)
@@ -290,71 +290,71 @@ torch::Tensor contract(torch::Tensor inData, const std::vector<int64_t> &vWindow
   switch (inData.scalar_type()) {
   case torch::kUInt8:
     {
-      switch (vWindow.size()) {
+      switch (window.size()) {
       case 2:
-        return contract2d_cpu<uint8_t>(inData, vWindow.data(), vPadding.data());
+        return contract2d_cpu<uint8_t>(inData, window.data(), padding.data());
       case 3:
-        return contract3d_cpu<uint8_t>(inData, vWindow.data(), vPadding.data());
+        return contract3d_cpu<uint8_t>(inData, window.data(), padding.data());
       }
     }
     break;
   case torch::kInt8:
     {
-      switch (vWindow.size()) {
+      switch (window.size()) {
       case 2:
-        return contract2d_cpu<int8_t>(inData, vWindow.data(), vPadding.data());
+        return contract2d_cpu<int8_t>(inData, window.data(), padding.data());
       case 3:
-        return contract3d_cpu<int8_t>(inData, vWindow.data(), vPadding.data());
+        return contract3d_cpu<int8_t>(inData, window.data(), padding.data());
       }
     }
     break;
   case torch::kInt16:
     {
-      switch (vWindow.size()) {
+      switch (window.size()) {
       case 2:
-        return contract2d_cpu<int16_t>(inData, vWindow.data(), vPadding.data());
+        return contract2d_cpu<int16_t>(inData, window.data(), padding.data());
       case 3:
-        return contract3d_cpu<int16_t>(inData, vWindow.data(), vPadding.data());
+        return contract3d_cpu<int16_t>(inData, window.data(), padding.data());
       }
     }
     break;
   case torch::kInt32:
     {
-      switch (vWindow.size()) {
+      switch (window.size()) {
       case 2:
-        return contract2d_cpu<int32_t>(inData, vWindow.data(), vPadding.data());
+        return contract2d_cpu<int32_t>(inData, window.data(), padding.data());
       case 3:
-        return contract3d_cpu<int32_t>(inData, vWindow.data(), vPadding.data());
+        return contract3d_cpu<int32_t>(inData, window.data(), padding.data());
       }
     }
     break;
   case torch::kInt64:
     {
-      switch (vWindow.size()) {
+      switch (window.size()) {
       case 2:
-        return contract2d_cpu<int64_t>(inData, vWindow.data(), vPadding.data());
+        return contract2d_cpu<int64_t>(inData, window.data(), padding.data());
       case 3:
-        return contract3d_cpu<int64_t>(inData, vWindow.data(), vPadding.data());
+        return contract3d_cpu<int64_t>(inData, window.data(), padding.data());
       }
     }
     break;
   case torch::kFloat32:
     {
-      switch (vWindow.size()) {
+      switch (window.size()) {
       case 2:
-        return contract2d_cpu<float>(inData, vWindow.data(), vPadding.data());
+        return contract2d_cpu<float>(inData, window.data(), padding.data());
       case 3:
-        return contract3d_cpu<float>(inData, vWindow.data(), vPadding.data());
+        return contract3d_cpu<float>(inData, window.data(), padding.data());
       }
     }
     break;
   case torch::kFloat64:
     {
-      switch (vWindow.size()) {
+      switch (window.size()) {
       case 2:
-        return contract2d_cpu<double>(inData, vWindow.data(), vPadding.data());
+        return contract2d_cpu<double>(inData, window.data(), padding.data());
       case 3:
-        return contract3d_cpu<double>(inData, vWindow.data(), vPadding.data());
+        return contract3d_cpu<double>(inData, window.data(), padding.data());
       }
     }
     break;
@@ -365,8 +365,8 @@ torch::Tensor contract(torch::Tensor inData, const std::vector<int64_t> &vWindow
   return torch::Tensor(); 
 }
 
-torch::Tensor expand(torch::Tensor inData, const std::vector<int64_t> &vPadding) {
-  if (vPadding.empty())
+torch::Tensor expand(torch::Tensor inData, IntArrayRef padding) {
+  if (padding.empty())
     return torch::Tensor();
 
   if (inData.device() != torch::kCPU)
@@ -377,71 +377,71 @@ torch::Tensor expand(torch::Tensor inData, const std::vector<int64_t> &vPadding)
   switch (inData.scalar_type()) {
   case torch::kUInt8:
     {
-      switch (vPadding.size()) {
+      switch (padding.size()) {
       case 2:
-        return expand2d_cpu<uint8_t>(inData, vPadding.data());
+        return expand2d_cpu<uint8_t>(inData, padding.data());
       case 3:
-        return expand3d_cpu<uint8_t>(inData, vPadding.data());
+        return expand3d_cpu<uint8_t>(inData, padding.data());
       }
     }
     break;
   case torch::kInt8:
     {
-      switch (vPadding.size()) {
+      switch (padding.size()) {
       case 2:
-        return expand2d_cpu<int8_t>(inData, vPadding.data());
+        return expand2d_cpu<int8_t>(inData, padding.data());
       case 3:
-        return expand3d_cpu<int8_t>(inData, vPadding.data());
+        return expand3d_cpu<int8_t>(inData, padding.data());
       }
     }
     break;
   case torch::kInt16:
     {
-      switch (vPadding.size()) {
+      switch (padding.size()) {
       case 2:
-        return expand2d_cpu<int16_t>(inData, vPadding.data());
+        return expand2d_cpu<int16_t>(inData, padding.data());
       case 3:
-        return expand3d_cpu<int16_t>(inData, vPadding.data());
+        return expand3d_cpu<int16_t>(inData, padding.data());
       }
     }
     break;
   case torch::kInt32:
     {
-      switch (vPadding.size()) {
+      switch (padding.size()) {
       case 2:
-        return expand2d_cpu<int32_t>(inData, vPadding.data());
+        return expand2d_cpu<int32_t>(inData, padding.data());
       case 3:
-        return expand3d_cpu<int32_t>(inData, vPadding.data());
+        return expand3d_cpu<int32_t>(inData, padding.data());
       }
     }
     break;
   case torch::kInt64:
     {
-      switch (vPadding.size()) {
+      switch (padding.size()) {
       case 2:
-        return expand2d_cpu<int64_t>(inData, vPadding.data());
+        return expand2d_cpu<int64_t>(inData, padding.data());
       case 3:
-        return expand3d_cpu<int64_t>(inData, vPadding.data());
+        return expand3d_cpu<int64_t>(inData, padding.data());
       }
     }
     break;
   case torch::kFloat32:
     {
-      switch (vPadding.size()) {
+      switch (padding.size()) {
       case 2:
-        return expand2d_cpu<float>(inData, vPadding.data());
+        return expand2d_cpu<float>(inData, padding.data());
       case 3:
-        return expand3d_cpu<float>(inData, vPadding.data());
+        return expand3d_cpu<float>(inData, padding.data());
       }
     }
     break;
   case torch::kFloat64:
     {
-      switch (vPadding.size()) {
+      switch (padding.size()) {
       case 2:
-        return expand2d_cpu<double>(inData, vPadding.data());
+        return expand2d_cpu<double>(inData, padding.data());
       case 3:
-        return expand3d_cpu<double>(inData, vPadding.data());
+        return expand3d_cpu<double>(inData, padding.data());
       }
     }
     break;
