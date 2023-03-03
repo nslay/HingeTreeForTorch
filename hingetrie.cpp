@@ -25,7 +25,6 @@
 #include <functional>
 
 #include "torch/extension.h"
-#include "caffe2/core/timer.h"
 #include "HingeTrieCommon.h"
 #include "MedianInit.h"
 

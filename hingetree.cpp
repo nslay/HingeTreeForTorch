@@ -26,12 +26,18 @@
 #include <functional>
 
 #include "torch/extension.h"
-#include "caffe2/core/timer.h"
+// XXX: No longer comes with PyTorch?
+//#include "caffe2/core/timer.h"
+#include "Timer.h"
 #include "HingeTreeCommon.h"
 #include "MedianInit.h"
 #include "GreedyInit.h"
 
 typedef c10::IntArrayRef IntArrayRef;
+
+// Broken in PyTorch 1.13
+//typedef caffe2::Timer TimerType;
+typedef bleak::Timer TimerType;
 
 template<typename RealType, typename TreeTraitsType>
 torch::Tensor hingetree_gpu_forward(torch::Tensor inData, torch::Tensor inThresholds, torch::Tensor inOrdinals, torch::Tensor inWeights);
@@ -1183,7 +1189,7 @@ torch::Tensor hingetree_speedtest(torch::Tensor inData, bool bDeterministic) {
       p_fDepths[t] = (float)i64Depth;
 
       {
-        caffe2::Timer clForwardTimer;
+        TimerType clForwardTimer;
 
         for (int64_t i64Batch = 0; i64Batch < i64NumBatches; ++i64Batch)
           outData = hingetree_forward(inData, inThresholds, inOrdinals, inWeights);
@@ -1197,7 +1203,7 @@ torch::Tensor hingetree_speedtest(torch::Tensor inData, bool bDeterministic) {
       torch::Tensor outDataGrad = torch::ones_like(outData);
 
       if (bDeterministic) {
-        caffe2::Timer clBackwardTimer;
+        TimerType clBackwardTimer;
 
         for (int64_t i64Batch = 0; i64Batch < i64NumBatches; ++i64Batch)
           hingetree_backward_deterministic(inData, true, inThresholds, true, inOrdinals, false, inWeights, true, outDataGrad);
@@ -1208,7 +1214,7 @@ torch::Tensor hingetree_speedtest(torch::Tensor inData, bool bDeterministic) {
         std::cout << "hingetree_backward_deterministic: numBatches = " << i64NumBatches << ", numTrees = " << i64NumTrees << ", depth = " << i64Depth << ": " << fAverage << " ms per batch." << std::endl;
       }
       else {
-        caffe2::Timer clBackwardTimer;
+        TimerType clBackwardTimer;
 
         for (int64_t i64Batch = 0; i64Batch < i64NumBatches; ++i64Batch)
           hingetree_backward(inData, true, inThresholds, true, inOrdinals, false, inWeights, true, outDataGrad);
@@ -1260,7 +1266,7 @@ torch::Tensor hingefern_speedtest(torch::Tensor inData, bool bDeterministic) {
       p_fDepths[t] = (float)i64Depth;
 
       {
-        caffe2::Timer clForwardTimer;
+        TimerType clForwardTimer;
 
         for (int64_t i64Batch = 0; i64Batch < i64NumBatches; ++i64Batch)
           outData = hingefern_forward(inData, inThresholds, inOrdinals, inWeights);
@@ -1274,7 +1280,7 @@ torch::Tensor hingefern_speedtest(torch::Tensor inData, bool bDeterministic) {
       torch::Tensor outDataGrad = torch::ones_like(outData);
 
       if (bDeterministic) {
-        caffe2::Timer clBackwardTimer;
+        TimerType clBackwardTimer;
 
         for (int64_t i64Batch = 0; i64Batch < i64NumBatches; ++i64Batch)
           hingefern_backward_deterministic(inData, true, inThresholds, true, inOrdinals, false, inWeights, true, outDataGrad);
@@ -1285,7 +1291,7 @@ torch::Tensor hingefern_speedtest(torch::Tensor inData, bool bDeterministic) {
         std::cout << "hingefern_backward_deterministic: numBatches = " << i64NumBatches << ", numTrees = " << i64NumTrees << ", depth = " << i64Depth << ": " << fAverage << " ms per batch." << std::endl;
       }
       else {
-        caffe2::Timer clBackwardTimer;
+        TimerType clBackwardTimer;
 
         for (int64_t i64Batch = 0; i64Batch < i64NumBatches; ++i64Batch)
           hingefern_backward(inData, true, inThresholds, true, inOrdinals, false, inWeights, true, outDataGrad);
