@@ -132,6 +132,8 @@ public:
 #ifdef __unix__
     struct timeval stStop;
     std::memset(&stStop, 0, sizeof(stStop));
+    
+    gettimeofday(&stStop, nullptr);
 
     // Same as converting both to seconds and subtracting the converted results
     return (stStop.tv_sec - m_stStart.tv_sec) + (stStop.tv_usec - m_stStart.tv_usec)/1000000.0;
