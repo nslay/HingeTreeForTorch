@@ -40,7 +40,7 @@
 
 #include <Windows.h>
 #elif defined(__unix__)
-#include <sys/time.h>
+#include <time.h>
 #else
 #error "Unsupported operating system."
 #endif
@@ -92,7 +92,7 @@ public:
 
 #ifdef __unix__
     std::memset(&m_stStart, 0, sizeof(m_stStart));
-    gettimeofday(&m_stStart, nullptr);
+    clock_gettime(CLOCK_MONOTONIC, &m_stStart);
 #endif // __unix__
   }
 
@@ -130,13 +130,13 @@ public:
 #endif // _WIN32
 
 #ifdef __unix__
-    struct timeval stStop;
+    struct timespec stStop;
     std::memset(&stStop, 0, sizeof(stStop));
     
-    gettimeofday(&stStop, nullptr);
+    clock_gettime(CLOCK_MONOTONIC, &stStop);
 
     // Same as converting both to seconds and subtracting the converted results
-    return (stStop.tv_sec - m_stStart.tv_sec) + (stStop.tv_usec - m_stStart.tv_usec)/1000000.0;
+    return (stStop.tv_sec - m_stStart.tv_sec) + (stStop.tv_nsec - m_stStart.tv_nsec)/1e9;
 #endif // __unix__
   }
 
@@ -168,7 +168,7 @@ private:
 #endif // _WIN32
 
 #ifdef __unix__
-  struct timeval m_stStart;
+  struct timespec m_stStart;
 #endif // __unix__
 
 };
