@@ -44,6 +44,51 @@ def expand(inData, padding=0):
 
   return hingetree_cpp.expand(inData, padding)
 
+class _Expand(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, inData, padding):
+        dim = (inData.dim()-2)//2
+        ctx.window = list(inData.shape[-dim:])
+        ctx.padding = padding
+        return expand(inData, padding)
+
+    @staticmethod
+    def backward(ctx, outDataGrad):
+        if ctx.needs_input_grad[0]:
+            return contract(outDataGrad.contiguous(), ctx.window, ctx.padding), None
+
+        return None, None
+
+class _Contract(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, inData, window, padding=0):
+        ctx.padding = padding
+        return contract(inData, window, padding)
+
+    @staticmethod
+    def backward(ctx, outDataGrad):
+        if ctx.needs_input_grad[0]:
+            return expand(outDataGrad.contiguous(), ctx.padding), None, None
+
+        return None, None, None
+
+class Expand(torch.nn.Module):
+    def __init__(self, padding=0):
+        super().__init__()
+        self.padding = padding
+
+    def forward(self, inData):
+        return _Expand.apply(inData, self.padding)
+
+class Contract(torch.nn.Module):
+    def __init__(self, window, padding=0):
+        super().__init__()
+        self.window = window
+        self.padding = padding
+
+    def forward(self, inData):
+        return _Contract.apply(inData, self.window, self.padding)
+
 class HingeTree(torch.autograd.Function):
     @staticmethod
     def forward(ctx, inData, inThresholds, inOrdinals, inWeights):

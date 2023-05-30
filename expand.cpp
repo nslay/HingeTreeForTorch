@@ -277,11 +277,58 @@ torch::Tensor expand3d_cpu(torch::Tensor inData, const int64_t a_i64Padding[2]) 
   return outData;
 }
 
-torch::Tensor contract(torch::Tensor inData, IntArrayRef window, IntArrayRef padding) {
-  if (window.empty() || window.size() != padding.size())
-    return torch::Tensor();
+#ifdef WITH_CUDA
+template<typename RealType>
+torch::Tensor contract2d_gpu(torch::Tensor inData, const int64_t a_i64Window[2], const int64_t a_i64Padding[2]);
 
-  if (inData.device() != torch::kCPU)
+template<typename RealType>
+torch::Tensor contract3d_gpu(torch::Tensor inData, const int64_t a_i64Window[2], const int64_t a_i64Padding[2]);
+
+template<typename RealType>
+torch::Tensor expand2d_gpu(torch::Tensor inData, const int64_t a_i64Padding[2]);
+
+template<typename RealType>
+torch::Tensor expand3d_gpu(torch::Tensor inData, const int64_t a_i64Padding[3]);
+#else // !WITH_CUDA
+template<typename RealType>
+torch::Tensor contract2d_gpu(torch::Tensor, const int64_t *, const int64_t *) { 
+  return torch::Tensor();
+}
+
+template<typename RealType>
+torch::Tensor contract3d_gpu(torch::Tensor, const int64_t *, const int64_t *) {
+  return torch::Tensor();
+}
+
+template<typename RealType>
+torch::Tensor expand2d_gpu(torch::Tensor, const int64_t *) {
+  return torch::Tensor();
+}
+
+template<typename RealType>
+torch::Tensor expand3d_gpu(torch::Tensor, const int64_t *) {
+  return torch::Tensor();
+}
+#endif // !WITH_CUDA
+
+template<typename RealType>
+torch::Tensor contract2d(torch::Tensor inData, const int64_t a_i64Window[2], const int64_t a_i64Padding[2]) {
+  if (inData.is_cuda())
+    return contract2d_gpu<RealType>(inData, a_i64Window, a_i64Padding);
+ 
+  return contract2d_cpu<RealType>(inData, a_i64Window, a_i64Padding);
+}
+
+template<typename RealType>
+torch::Tensor contract3d(torch::Tensor inData, const int64_t a_i64Window[3], const int64_t a_i64Padding[3]) {
+  if (inData.is_cuda())
+    return contract3d_gpu<RealType>(inData, a_i64Window, a_i64Padding);
+
+  return contract3d_cpu<RealType>(inData, a_i64Window, a_i64Padding);
+}
+
+torch::Tensor contract(torch::Tensor inData, IntArrayRef window, IntArrayRef padding) {
+  if (window.empty() || window.size() != padding.size() || !inData.is_contiguous())
     return torch::Tensor();
 
   c10::DeviceGuard clGuard(inData.device());
@@ -291,9 +338,9 @@ torch::Tensor contract(torch::Tensor inData, IntArrayRef window, IntArrayRef pad
     {
       switch (window.size()) {
       case 2:
-        return contract2d_cpu<uint8_t>(inData, window.data(), padding.data());
+        return contract2d<uint8_t>(inData, window.data(), padding.data());
       case 3:
-        return contract3d_cpu<uint8_t>(inData, window.data(), padding.data());
+        return contract3d<uint8_t>(inData, window.data(), padding.data());
       }
     }
     break;
@@ -301,9 +348,9 @@ torch::Tensor contract(torch::Tensor inData, IntArrayRef window, IntArrayRef pad
     {
       switch (window.size()) {
       case 2:
-        return contract2d_cpu<int8_t>(inData, window.data(), padding.data());
+        return contract2d<int8_t>(inData, window.data(), padding.data());
       case 3:
-        return contract3d_cpu<int8_t>(inData, window.data(), padding.data());
+        return contract3d<int8_t>(inData, window.data(), padding.data());
       }
     }
     break;
@@ -311,9 +358,9 @@ torch::Tensor contract(torch::Tensor inData, IntArrayRef window, IntArrayRef pad
     {
       switch (window.size()) {
       case 2:
-        return contract2d_cpu<int16_t>(inData, window.data(), padding.data());
+        return contract2d<int16_t>(inData, window.data(), padding.data());
       case 3:
-        return contract3d_cpu<int16_t>(inData, window.data(), padding.data());
+        return contract3d<int16_t>(inData, window.data(), padding.data());
       }
     }
     break;
@@ -321,9 +368,9 @@ torch::Tensor contract(torch::Tensor inData, IntArrayRef window, IntArrayRef pad
     {
       switch (window.size()) {
       case 2:
-        return contract2d_cpu<int32_t>(inData, window.data(), padding.data());
+        return contract2d<int32_t>(inData, window.data(), padding.data());
       case 3:
-        return contract3d_cpu<int32_t>(inData, window.data(), padding.data());
+        return contract3d<int32_t>(inData, window.data(), padding.data());
       }
     }
     break;
@@ -331,9 +378,9 @@ torch::Tensor contract(torch::Tensor inData, IntArrayRef window, IntArrayRef pad
     {
       switch (window.size()) {
       case 2:
-        return contract2d_cpu<int64_t>(inData, window.data(), padding.data());
+        return contract2d<int64_t>(inData, window.data(), padding.data());
       case 3:
-        return contract3d_cpu<int64_t>(inData, window.data(), padding.data());
+        return contract3d<int64_t>(inData, window.data(), padding.data());
       }
     }
     break;
@@ -341,9 +388,9 @@ torch::Tensor contract(torch::Tensor inData, IntArrayRef window, IntArrayRef pad
     {
       switch (window.size()) {
       case 2:
-        return contract2d_cpu<float>(inData, window.data(), padding.data());
+        return contract2d<float>(inData, window.data(), padding.data());
       case 3:
-        return contract3d_cpu<float>(inData, window.data(), padding.data());
+        return contract3d<float>(inData, window.data(), padding.data());
       }
     }
     break;
@@ -351,9 +398,9 @@ torch::Tensor contract(torch::Tensor inData, IntArrayRef window, IntArrayRef pad
     {
       switch (window.size()) {
       case 2:
-        return contract2d_cpu<double>(inData, window.data(), padding.data());
+        return contract2d<double>(inData, window.data(), padding.data());
       case 3:
-        return contract3d_cpu<double>(inData, window.data(), padding.data());
+        return contract3d<double>(inData, window.data(), padding.data());
       }
     }
     break;
@@ -364,11 +411,24 @@ torch::Tensor contract(torch::Tensor inData, IntArrayRef window, IntArrayRef pad
   return torch::Tensor(); 
 }
 
-torch::Tensor expand(torch::Tensor inData, IntArrayRef padding) {
-  if (padding.empty())
-    return torch::Tensor();
+template<typename RealType>
+torch::Tensor expand2d(torch::Tensor inData, const int64_t a_i64Padding[2]) {
+  if (inData.is_cuda())
+    return expand2d_gpu<RealType>(inData, a_i64Padding);
 
-  if (inData.device() != torch::kCPU)
+  return expand2d_cpu<RealType>(inData, a_i64Padding);
+}
+
+template<typename RealType>
+torch::Tensor expand3d(torch::Tensor inData, const int64_t a_i64Padding[3]) {
+  if (inData.is_cuda())
+    return expand3d_gpu<RealType>(inData, a_i64Padding);
+
+  return expand3d_cpu<RealType>(inData, a_i64Padding);
+}
+
+torch::Tensor expand(torch::Tensor inData, IntArrayRef padding) {
+  if (padding.empty() || !inData.is_contiguous())
     return torch::Tensor();
 
   c10::DeviceGuard clGuard(inData.device());
@@ -378,9 +438,9 @@ torch::Tensor expand(torch::Tensor inData, IntArrayRef padding) {
     {
       switch (padding.size()) {
       case 2:
-        return expand2d_cpu<uint8_t>(inData, padding.data());
+        return expand2d<uint8_t>(inData, padding.data());
       case 3:
-        return expand3d_cpu<uint8_t>(inData, padding.data());
+        return expand3d<uint8_t>(inData, padding.data());
       }
     }
     break;
@@ -388,9 +448,9 @@ torch::Tensor expand(torch::Tensor inData, IntArrayRef padding) {
     {
       switch (padding.size()) {
       case 2:
-        return expand2d_cpu<int8_t>(inData, padding.data());
+        return expand2d<int8_t>(inData, padding.data());
       case 3:
-        return expand3d_cpu<int8_t>(inData, padding.data());
+        return expand3d<int8_t>(inData, padding.data());
       }
     }
     break;
@@ -398,9 +458,9 @@ torch::Tensor expand(torch::Tensor inData, IntArrayRef padding) {
     {
       switch (padding.size()) {
       case 2:
-        return expand2d_cpu<int16_t>(inData, padding.data());
+        return expand2d<int16_t>(inData, padding.data());
       case 3:
-        return expand3d_cpu<int16_t>(inData, padding.data());
+        return expand3d<int16_t>(inData, padding.data());
       }
     }
     break;
@@ -408,9 +468,9 @@ torch::Tensor expand(torch::Tensor inData, IntArrayRef padding) {
     {
       switch (padding.size()) {
       case 2:
-        return expand2d_cpu<int32_t>(inData, padding.data());
+        return expand2d<int32_t>(inData, padding.data());
       case 3:
-        return expand3d_cpu<int32_t>(inData, padding.data());
+        return expand3d<int32_t>(inData, padding.data());
       }
     }
     break;
@@ -418,9 +478,9 @@ torch::Tensor expand(torch::Tensor inData, IntArrayRef padding) {
     {
       switch (padding.size()) {
       case 2:
-        return expand2d_cpu<int64_t>(inData, padding.data());
+        return expand2d<int64_t>(inData, padding.data());
       case 3:
-        return expand3d_cpu<int64_t>(inData, padding.data());
+        return expand3d<int64_t>(inData, padding.data());
       }
     }
     break;
@@ -428,9 +488,9 @@ torch::Tensor expand(torch::Tensor inData, IntArrayRef padding) {
     {
       switch (padding.size()) {
       case 2:
-        return expand2d_cpu<float>(inData, padding.data());
+        return expand2d<float>(inData, padding.data());
       case 3:
-        return expand3d_cpu<float>(inData, padding.data());
+        return expand3d<float>(inData, padding.data());
       }
     }
     break;
@@ -438,9 +498,9 @@ torch::Tensor expand(torch::Tensor inData, IntArrayRef padding) {
     {
       switch (padding.size()) {
       case 2:
-        return expand2d_cpu<double>(inData, padding.data());
+        return expand2d<double>(inData, padding.data());
       case 3:
-        return expand3d_cpu<double>(inData, padding.data());
+        return expand3d<double>(inData, padding.data());
       }
     }
     break;

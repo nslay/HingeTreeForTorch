@@ -29,6 +29,7 @@ if torch.cuda.is_available():
   sourceFiles.append('ImageToMatrix_gpu.cu')
   sourceFiles.append('hingetree_conv_gpu.cu')
   sourceFiles.append('hingetree_fused_linear_gpu.cu')
+  sourceFiles.append('expand_gpu.cu')
   extraCflags.append('-DWITH_CUDA=1')
   extraCudaFlags.append('-DWITH_CUDA=1')
 
