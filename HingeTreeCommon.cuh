@@ -77,6 +77,35 @@ public:
 
     return KeyMarginTupleType(leafKey, minMargin, minFernIndex);
   }
+
+  __device__ static KeyMarginTupleType ComputeKeyAndSignedMargin(const RealType *p_img, const RealType *p_vec, const RealType *p_thresholds, const int64_t *p_ordinals, int64_t i64TreeDepth, int64_t i64ImgChannels, int64_t i64Stride = 1) {
+    auto GetFeature = [&](int64_t j) -> RealType {
+      if (j < i64ImgChannels)
+          return p_img[i64Stride*j];
+
+      return p_vec[j-i64ImgChannels];
+    };
+
+    KeyType leafKey = KeyType();
+    RealType minMargin = GetFeature(p_ordinals[0]) - p_thresholds[0];
+    KeyType minFernIndex = 0;
+
+    for (int64_t i = 0; i < i64TreeDepth; ++i) {
+      const int64_t j = p_ordinals[i];
+      const RealType margin = GetFeature(j) - p_thresholds[i];
+      const KeyType bit = (margin > RealType(0));
+
+      leafKey |= (bit << i);
+
+      if (std::abs(margin) < std::abs(minMargin)) {
+        minMargin = margin;
+        minFernIndex = KeyType(i);
+      }
+    }
+
+    return KeyMarginTupleType(leafKey, minMargin, minFernIndex);
+  }
+
 };
 
 // A lame way to extend these classes to get __device__ functions!
@@ -123,6 +152,37 @@ public:
 
     return KeyMarginTuple(leafKey, minMargin, minTreeIndex);
   }
+
+  __device__ static KeyMarginTupleType ComputeKeyAndSignedMargin(const RealType *p_img, const RealType *p_vec, const RealType *p_thresholds, const int64_t *p_ordinals, int64_t i64TreeDepth, int64_t i64ImgChannels, int64_t i64Stride = 1) {
+    auto GetFeature = [&](int64_t j) -> RealType {
+      if (j < i64ImgChannels)
+          return p_img[i64Stride*j];
+
+      return p_vec[j-i64ImgChannels];
+    };
+
+    KeyType leafKey = KeyType();
+    KeyType treeIndex = KeyType();
+    RealType minMargin = GetFeature(p_ordinals[0]) - p_thresholds[0];
+    KeyType minTreeIndex = KeyType();
+
+    for (int64_t i = 0; i < i64TreeDepth; ++i) {
+      const int64_t j = p_ordinals[treeIndex];
+      const RealType margin = GetFeature(j) - p_thresholds[treeIndex];
+      const KeyType bit = (margin > RealType(0));
+
+      if (std::abs(margin) < std::abs(minMargin)) {
+        minMargin = margin;
+        minTreeIndex = treeIndex;
+      }
+
+      leafKey |= (bit << i);
+      treeIndex = 2*treeIndex + 1 + bit;
+    }
+
+    return KeyMarginTuple(leafKey, minMargin, minTreeIndex);
+  }
+
 };
 
 } // end namespace bleak

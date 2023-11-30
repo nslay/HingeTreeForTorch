@@ -20,8 +20,13 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.init as init
-from HingeTree import HingeTree, HingeFern, HingeTrie, HingeTreeFusedLinear
-
+from HingeTree import (
+    HingeTree, HingeFern, 
+    HingeTrie, 
+    HingeTreeFusedLinear, HingeFernFusedLinear, 
+    HingeTreeFusion, HingeFernFusion,
+    HingeTreeFusionFusedLinear, HingeFernFusionFusedLinear,
+)
 
 class RandomHingeForest(nn.Module):
     __constants__ = [ "in_channels", "out_channels", "depth", "extra_outputs", "init_type" ]
@@ -33,7 +38,7 @@ class RandomHingeForest(nn.Module):
     init_type: str
 
     def __init__(self, in_channels: int, out_channels: int, depth: int, extra_outputs = None, init_type: str = "random"):
-        super(RandomHingeForest, self).__init__()
+        super().__init__()
 
         # Meta data
         self.in_channels = in_channels
@@ -144,7 +149,7 @@ class RandomHingeFern(nn.Module):
     init_type: str
 
     def __init__(self, in_channels: int, out_channels: int, depth: int, extra_outputs = None, init_type: str = "random"):
-        super(RandomHingeFern, self).__init__()
+        super().__init__()
 
         # Meta data
         self.in_channels = in_channels
@@ -280,7 +285,7 @@ class RandomHingeTrie(nn.Module):
 
 class RandomHingeForestFusedLinear(RandomHingeForest):
     def __init__(self, in_channels: int, number_of_trees: int, out_channels: int, depth: int, extra_outputs = None, init_type: str = "random", bias: bool = True):
-        super(RandomHingeForestFusedLinear, self).__init__(in_channels, number_of_trees, depth, extra_outputs, init_type)
+        super().__init__(in_channels, number_of_trees, depth, extra_outputs, init_type)
 
         self.linear_weights = nn.Parameter(torch.empty([out_channels, number_of_trees]))
         self.linear_bias = nn.Parameter(torch.zeros([out_channels]), requires_grad=bias)
@@ -295,4 +300,170 @@ class RandomHingeForestFusedLinear(RandomHingeForest):
 
     def forward(self, x):
         return HingeTreeFusedLinear.apply(x, self.thresholds, self.ordinals, self.weights, self.linear_weights, self.linear_bias)
+
+class RandomHingeFernFusedLinear(RandomHingeFern):
+    def __init__(self, in_channels: int, number_of_trees: int, out_channels: int, depth: int, extra_outputs = None, init_type: str = "random", bias: bool = True):
+        super().__init__(in_channels, number_of_trees, depth, extra_outputs, init_type)
+
+        self.linear_weights = nn.Parameter(torch.empty([out_channels, number_of_trees]))
+        self.linear_bias = nn.Parameter(torch.zeros([out_channels]), requires_grad=bias)
+
+        # Copied from nn.Linear
+        init.kaiming_uniform_(self.linear_weights, a=math.sqrt(5))
+
+        if bias:
+            fan_in, _ = init._calculate_fan_in_and_fan_out(self.linear_weights)
+            bound = 1 / math.sqrt(fan_in) if fan_in > 0 else 0
+            init.uniform_(self.linear_bias, -bound, bound)
+
+    def forward(self, x):
+        return HingeFernFusedLinear.apply(x, self.thresholds, self.ordinals, self.weights, self.linear_weights, self.linear_bias)
+
+class RandomHingeForestFusion(nn.Module):
+    __constants__ = [ "img_channels", "vec_channels", "out_channels", "depth", "extra_outputs", "init_type" ]
+
+    img_channels: int
+    vec_channels: int
+    out_channels: int
+    depth: int
+    extra_outputs: int
+    init_type: str
+
+    def __init__(self, img_channels: int, vec_channels: int, out_channels: int, depth: int, extra_outputs = None, init_type: str = "balanced_random", p = 0.5):
+        super().__init__()
+
+        # Meta data
+        self.img_channels = img_channels
+        self.vec_channels = vec_channels
+        self.out_channels = out_channels
+        self.depth = depth
+        self.extra_outputs = extra_outputs
+        self.init_type = init_type
+
+        in_channels = img_channels + vec_channels
+
+        thresholds = 6.0*torch.rand([out_channels, 2**depth - 1]) - 3.0
+
+        if init_type == "random":
+            ordinals = torch.randint_like(thresholds, low=0, high=in_channels, dtype=torch.long)
+        if init_type == "balanced_random":
+            assert p >= 0.0 and p <= 1.0
+            feature_weights = [ p/img_channels ]*img_channels + [ (1.0-p)/vec_channels ]*vec_channels
+            ordinals = list(torch.utils.data.WeightedRandomSampler(feature_weights, thresholds.numel(), replacement=True))
+            ordinals = torch.tensor(ordinals, dtype=torch.long).view(thresholds.shape)
+        elif init_type == "sequential":
+            ordinals = torch.arange(thresholds.numel(), dtype=torch.long)
+            ordinals -= in_channels * (ordinals // in_channels)
+            ordinals = torch.reshape(ordinals, thresholds.shape)
+        else:
+            raise RuntimeError(f"Unknown init_type {init_type}. Must be one of 'random' or 'sequential'.")
+
+        if extra_outputs is None:
+            weights = torch.randn([out_channels, 2**depth])
+        elif hasattr(extra_outputs, "__iter__"):
+            weights = torch.randn([out_channels, 2**depth] + list(extra_outputs))
+        else:
+            weights = torch.randn([out_channels, 2**depth, extra_outputs])
+
+        HingeTree.fix_thresholds(thresholds, ordinals, weights)
+
+        self.weights = nn.Parameter(weights, requires_grad=True)
+        self.thresholds = nn.Parameter(thresholds, requires_grad=True)
+        self.ordinals = nn.Parameter(ordinals, requires_grad=False)
+
+    def forward(self, img, vec):
+        assert img.shape[1] == self.img_channels and vec.shape[1] == self.vec_channels
+        return HingeTreeFusion.apply(img, vec, self.thresholds, self.ordinals, self.weights)
+
+class RandomHingeFernFusion(nn.Module):
+    __constants__ = [ "img_channels", "vec_channels", "out_channels", "depth", "extra_outputs", "init_type" ]
+
+    img_channels: int
+    vec_channels: int
+    out_channels: int
+    depth: int
+    extra_outputs: int
+    init_type: str
+
+    def __init__(self, img_channels: int, vec_channels: int, out_channels: int, depth: int, extra_outputs = None, init_type: str = "balanced_random", p = 0.5):
+        super().__init__()
+
+        # Meta data
+        self.img_channels = img_channels
+        self.vec_channels = vec_channels
+        self.out_channels = out_channels
+        self.depth = depth
+        self.extra_outputs = extra_outputs
+        self.init_type = init_type
+
+        in_channels = img_channels + vec_channels
+
+        thresholds = 6.0*torch.rand([out_channels, depth]) - 3.0
+
+        if init_type == "random":
+            ordinals = torch.randint_like(thresholds, low=0, high=in_channels, dtype=torch.long)
+        if init_type == "balanced_random":
+            assert p >= 0.0 and p <= 1.0
+            feature_weights = [ p/img_channels ]*img_channels + [ (1.0-p)/vec_channels ]*vec_channels
+            ordinals = list(torch.utils.data.WeightedRandomSampler(feature_weights, thresholds.numel(), replacement=True))
+            ordinals = torch.tensor(ordinals, dtype=torch.long).view(thresholds.shape)
+        elif init_type == "sequential":
+            ordinals = torch.arange(thresholds.numel(), dtype=torch.long)
+            ordinals -= in_channels * (ordinals // in_channels)
+            ordinals = torch.reshape(ordinals, thresholds.shape)
+        else:
+            raise RuntimeError(f"Unknown init_type {init_type}. Must be one of 'random' or 'sequential'.")
+
+        if extra_outputs is None:
+            weights = torch.randn([out_channels, 2**depth])
+        elif hasattr(extra_outputs, "__iter__"):
+            weights = torch.randn([out_channels, 2**depth] + list(extra_outputs))
+        else:
+            weights = torch.randn([out_channels, 2**depth, extra_outputs])
+
+        HingeFern.fix_thresholds(thresholds, ordinals, weights) # Doesn't do anything for ferns
+
+        self.weights = nn.Parameter(weights, requires_grad=True)
+        self.thresholds = nn.Parameter(thresholds, requires_grad=True)
+        self.ordinals = nn.Parameter(ordinals, requires_grad=False)
+
+    def forward(self, img, vec):
+        assert img.shape[1] == self.img_channels and vec.shape[1] == self.vec_channels
+        return HingeFernFusion.apply(img, vec, self.thresholds, self.ordinals, self.weights)
+
+class RandomHingeForestFusionFusedLinear(RandomHingeForestFusion):
+    def __init__(self, img_channels: int, vec_channels: int, number_of_trees: int, out_channels: int, depth: int, extra_outputs = None, init_type: str = "balanced_random", p = 0.5, bias: bool = True):
+        super().__init__(img_channels, vec_channels, number_of_trees, depth, extra_outputs, init_type, p)
+
+        self.linear_weights = nn.Parameter(torch.empty([out_channels, number_of_trees]))
+        self.linear_bias = nn.Parameter(torch.zeros([out_channels]), requires_grad=bias)
+
+        # Copied from nn.Linear
+        init.kaiming_uniform_(self.linear_weights, a=math.sqrt(5))
+
+        if bias:
+            fan_in, _ = init._calculate_fan_in_and_fan_out(self.linear_weights)
+            bound = 1 / math.sqrt(fan_in) if fan_in > 0 else 0
+            init.uniform_(self.linear_bias, -bound, bound)
+
+    def forward(self, img, vec):
+        return HingeTreeFusionFusedLinear.apply(img, vec, self.thresholds, self.ordinals, self.weights, self.linear_weights, self.linear_bias)
+
+class RandomHingeFernFusionFusedLinear(RandomHingeFernFusion):
+    def __init__(self, img_channels: int, vec_channels: int, number_of_trees: int, out_channels: int, depth: int, extra_outputs = None, init_type: str = "balanced_random", p = 0.5, bias: bool = True):
+        super().__init__(img_channels, vec_channels, number_of_trees, depth, extra_outputs, init_type, p)
+
+        self.linear_weights = nn.Parameter(torch.empty([out_channels, number_of_trees]))
+        self.linear_bias = nn.Parameter(torch.zeros([out_channels]), requires_grad=bias)
+
+        # Copied from nn.Linear
+        init.kaiming_uniform_(self.linear_weights, a=math.sqrt(5))
+
+        if bias:
+            fan_in, _ = init._calculate_fan_in_and_fan_out(self.linear_weights)
+            bound = 1 / math.sqrt(fan_in) if fan_in > 0 else 0
+            init.uniform_(self.linear_bias, -bound, bound)
+
+    def forward(self, img, vec):
+        return HingeFernFusionFusedLinear.apply(img, vec, self.thresholds, self.ordinals, self.weights, self.linear_weights, self.linear_bias)
 

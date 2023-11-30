@@ -59,9 +59,9 @@ __global__ void ForwardKernel(const RealType *d_inData, const RealType *d_inThre
 
   typedef typename TreeTraitsTypeGPU::KeyType KeyType;
 
-  const int64_t i = (int64_t)blockIdx.x * blockDim.x + threadIdx.x;
-  const int64_t j = (int64_t)blockIdx.y * blockDim.y + threadIdx.y;
-  const int64_t k = (int64_t)blockIdx.z * blockDim.z + threadIdx.z;
+  const int64_t i = (int64_t)blockIdx.y * blockDim.y + threadIdx.y;
+  const int64_t j = (int64_t)blockIdx.z * blockDim.z + threadIdx.z;
+  const int64_t k = (int64_t)blockIdx.x * blockDim.x + threadIdx.x;
 
   if (i < i64OuterNum && j < i64NumTrees && k < i64InnerDataNum) {
     const RealType * const d_thresholds = d_inThresholds + j*i64ThresholdStride;
@@ -117,9 +117,9 @@ __global__ void LeafMapKernel(const RealType *d_inData, const RealType *d_inThre
 
   typedef typename TreeTraitsTypeGPU::KeyType KeyType;
 
-  const int64_t i = (int64_t)blockIdx.x * blockDim.x + threadIdx.x;
-  const int64_t j = (int64_t)blockIdx.y * blockDim.y + threadIdx.y;
-  const int64_t k = (int64_t)blockIdx.z * blockDim.z + threadIdx.z;
+  const int64_t i = (int64_t)blockIdx.y * blockDim.y + threadIdx.y;
+  const int64_t j = (int64_t)blockIdx.z * blockDim.z + threadIdx.z;
+  const int64_t k = (int64_t)blockIdx.x * blockDim.x + threadIdx.x;
 
   if (i < i64OuterNum && j < i64NumTrees && k < i64InnerDataNum) {
     const RealType * const d_thresholds = d_inThresholds + j*i64ThresholdStride;
@@ -142,9 +142,9 @@ __global__ void MarginMapKernel(const RealType *d_inData, const RealType *d_inTh
 
   typedef typename TreeTraitsTypeGPU::KeyType KeyType;
 
-  const int64_t i = (int64_t)blockIdx.x * blockDim.x + threadIdx.x;
-  const int64_t j = (int64_t)blockIdx.y * blockDim.y + threadIdx.y;
-  const int64_t k = (int64_t)blockIdx.z * blockDim.z + threadIdx.z;
+  const int64_t i = (int64_t)blockIdx.y * blockDim.y + threadIdx.y;
+  const int64_t j = (int64_t)blockIdx.z * blockDim.z + threadIdx.z;
+  const int64_t k = (int64_t)blockIdx.x * blockDim.x + threadIdx.x;
 
   if (i < i64OuterNum && j < i64NumTrees && k < i64InnerDataNum) {
     const RealType * const d_thresholds = d_inThresholds + j*i64ThresholdStride;
@@ -214,9 +214,9 @@ __global__ void BackwardThresholdsKernel(const RealType *d_inData, const RealTyp
 
   typedef typename TreeTraitsTypeGPU::KeyType KeyType;
 
-  const int64_t i = (int64_t)blockIdx.x * blockDim.x + threadIdx.x;
-  const int64_t j = (int64_t)blockIdx.y * blockDim.y + threadIdx.y;
-  const int64_t k = (int64_t)blockIdx.z * blockDim.z + threadIdx.z;
+  const int64_t i = (int64_t)blockIdx.y * blockDim.y + threadIdx.y;
+  const int64_t j = (int64_t)blockIdx.z * blockDim.z + threadIdx.z;
+  const int64_t k = (int64_t)blockIdx.x * blockDim.x + threadIdx.x;
 
   if (i < i64OuterNum && j < i64NumTrees && k < i64InnerDataNum) {
     const RealType * const d_thresholds = d_inThresholds + j*i64ThresholdStride;
@@ -295,9 +295,9 @@ __global__ void BackwardWeightsKernel(const RealType *d_inData, const RealType *
 
   typedef typename TreeTraitsTypeGPU::KeyType KeyType;
 
-  const int64_t i = (int64_t)blockIdx.x * blockDim.x + threadIdx.x;
-  const int64_t j = (int64_t)blockIdx.y * blockDim.y + threadIdx.y;
-  const int64_t k = (int64_t)blockIdx.z * blockDim.z + threadIdx.z;
+  const int64_t i = (int64_t)blockIdx.y * blockDim.y + threadIdx.y;
+  const int64_t j = (int64_t)blockIdx.z * blockDim.z + threadIdx.z;
+  const int64_t k = (int64_t)blockIdx.x * blockDim.x + threadIdx.x;
 
   if (i < i64OuterNum && j < i64NumTrees && k < i64InnerDataNum) {
     const RealType * const d_thresholds = d_inThresholds + j*i64ThresholdStride;
@@ -331,8 +331,8 @@ __global__ void DeterministicBackwardDataKernel(const RealType *d_inData, const 
   typedef typename TreeTraitsTypeGPU::KeyType KeyType;
 
   // Batch and inner indices
-  const int64_t i = (int64_t)blockIdx.x * blockDim.x + threadIdx.x;
-  const int64_t k = (int64_t)blockIdx.y * blockDim.y + threadIdx.y;
+  const int64_t i = (int64_t)blockIdx.y * blockDim.y + threadIdx.y;
+  const int64_t k = (int64_t)blockIdx.x * blockDim.x + threadIdx.x;
 
   if (i < i64OuterNum && k < i64InnerDataNum) {
     const RealType * const d_row = d_inData + ((i*i64NumChannels + 0)*i64InnerDataNum + k);
@@ -372,9 +372,9 @@ __global__ void BackwardDataKernel(const RealType *d_inData, const RealType *d_i
 
   typedef typename TreeTraitsTypeGPU::KeyType KeyType;
 
-  const int64_t i = (int64_t)blockIdx.x * blockDim.x + threadIdx.x;
-  const int64_t j = (int64_t)blockIdx.y * blockDim.y + threadIdx.y;
-  const int64_t k = (int64_t)blockIdx.z * blockDim.z + threadIdx.z;
+  const int64_t i = (int64_t)blockIdx.y * blockDim.y + threadIdx.y;
+  const int64_t j = (int64_t)blockIdx.z * blockDim.z + threadIdx.z;
+  const int64_t k = (int64_t)blockIdx.x * blockDim.x + threadIdx.x;
 
   if (i < i64OuterNum && j < i64NumTrees && k < i64InnerDataNum) {
     const RealType * const d_thresholds = d_inThresholds + j*i64ThresholdStride;
@@ -476,8 +476,8 @@ torch::Tensor hingetree_gpu_forward(torch::Tensor inData, torch::Tensor inThresh
     i64InnerWeightsNum = std::accumulate(inWeightsSlice.begin(), inWeightsSlice.end(), (int64_t)1, std::multiplies<IntArrayRef::value_type>());
   }
   
-  const dim3 threadsPerBlock(8,16,4);
-  const dim3 numBlocks((i64BatchSize + threadsPerBlock.x-1)/threadsPerBlock.x, (i64NumTrees + threadsPerBlock.y-1)/threadsPerBlock.y, (i64InnerDataNum + threadsPerBlock.z-1)/threadsPerBlock.z);
+  const dim3 threadsPerBlock(16,8,8);
+  const dim3 numBlocks((i64InnerDataNum + threadsPerBlock.x-1)/threadsPerBlock.x, (i64BatchSize + threadsPerBlock.y-1)/threadsPerBlock.y, (i64NumTrees + threadsPerBlock.z-1)/threadsPerBlock.z);
 
   ForwardKernel<TreeTraitsTypeGPU><<<numBlocks, threadsPerBlock>>>(p_inData, p_inThresholds, p_inOrdinals, p_inWeights, p_outData, 
     i64TreeDepth, i64NumDecisionsPerTree, i64NumLeavesPerTree, i64InnerWeightsNum, i64NumTrees, i64BatchSize, i64NumChannels, i64InnerDataNum);
@@ -550,8 +550,8 @@ std::vector<torch::Tensor> hingetree_gpu_backward_deterministic(torch::Tensor in
     torch::Tensor inDataGrad = torch::zeros_like(inData);
     RealType * const p_inDataGrad = inDataGrad.data_ptr<RealType>();
 
-    const dim3 threadsPerBlock(32,16);
-    const dim3 numBlocks((i64BatchSize + threadsPerBlock.x-1)/threadsPerBlock.x, (i64InnerDataNum + threadsPerBlock.y-1)/threadsPerBlock.y);
+    const dim3 threadsPerBlock(32,32);
+    const dim3 numBlocks((i64InnerDataNum + threadsPerBlock.x-1)/threadsPerBlock.x, (i64BatchSize + threadsPerBlock.y-1)/threadsPerBlock.y);
 
     DeterministicBackwardDataKernel<TreeTraitsTypeGPU><<<numBlocks, threadsPerBlock>>>(p_inData, p_inThresholds, p_inOrdinals, p_inWeights, p_outDataGrad, p_inDataGrad, 
       i64TreeDepth, i64NumDecisionsPerTree, i64NumLeavesPerTree, i64InnerWeightsNum, i64NumTrees, i64BatchSize, i64NumChannels, i64InnerDataNum);
@@ -563,7 +563,7 @@ std::vector<torch::Tensor> hingetree_gpu_backward_deterministic(torch::Tensor in
     torch::Tensor inThresholdsGrad = torch::zeros_like(inThresholds);
     RealType * const p_inThresholdsGrad = inThresholdsGrad.data_ptr<RealType>();
     
-    const dim3 threadsPerBlock(512);
+    const dim3 threadsPerBlock(1024);
     const dim3 numBlocks((i64NumTrees + threadsPerBlock.x-1)/threadsPerBlock.x);
 
     DeterministicBackwardThresholdsKernel<TreeTraitsTypeGPU><<<numBlocks, threadsPerBlock>>>(p_inData, p_inThresholds, p_inOrdinals, p_inWeights, p_outDataGrad, p_inThresholdsGrad, 
@@ -576,7 +576,7 @@ std::vector<torch::Tensor> hingetree_gpu_backward_deterministic(torch::Tensor in
     torch::Tensor inWeightsGrad = torch::zeros_like(inWeights);
     RealType * const p_inWeightsGrad = inWeightsGrad.data_ptr<RealType>();
     
-    const dim3 threadsPerBlock(512);
+    const dim3 threadsPerBlock(1024);
     const dim3 numBlocks((i64NumTrees + threadsPerBlock.x-1)/threadsPerBlock.x);
 
     DeterministicBackwardWeightsKernel<TreeTraitsTypeGPU><<<numBlocks, threadsPerBlock>>>(p_inData, p_inThresholds, p_inOrdinals, p_outDataGrad, p_inWeightsGrad, 
@@ -647,8 +647,8 @@ std::vector<torch::Tensor> hingetree_gpu_backward(torch::Tensor inData, bool bIn
   const RealType * const p_inWeights = inWeights.data_ptr<RealType>();
   const RealType * const p_outDataGrad = outDataGrad.data_ptr<RealType>();
 
-  const dim3 threadsPerBlock(8,16,4);
-  const dim3 numBlocks((i64BatchSize + threadsPerBlock.x-1)/threadsPerBlock.x, (i64NumTrees + threadsPerBlock.y-1)/threadsPerBlock.y, (i64InnerDataNum + threadsPerBlock.z-1)/threadsPerBlock.z);
+  const dim3 threadsPerBlock(16,8,8);
+  const dim3 numBlocks((i64InnerDataNum + threadsPerBlock.x-1)/threadsPerBlock.x, (i64BatchSize + threadsPerBlock.y-1)/threadsPerBlock.y, (i64NumTrees + threadsPerBlock.z-1)/threadsPerBlock.z);
 
   std::vector<torch::Tensor> vGradTensors(4);
 
@@ -725,7 +725,7 @@ torch::Tensor hingetree_gpu_reachability(torch::Tensor inData, torch::Tensor inT
     i64InnerDataNum = std::accumulate(inDataSlice.begin(), inDataSlice.end(), (int64_t)1, std::multiplies<IntArrayRef::value_type>());
   }
   
-  const dim3 threadsPerBlock(512);
+  const dim3 threadsPerBlock(1024);
   const dim3 numBlocks((i64NumTrees + threadsPerBlock.x-1)/threadsPerBlock.x);
 
   ReachabilityKernel<TreeTraitsTypeGPU><<<numBlocks, threadsPerBlock>>>(p_inData, p_inThresholds, p_inOrdinals, p_outCounts,
@@ -786,8 +786,8 @@ torch::Tensor hingetree_gpu_leafmap(torch::Tensor inData, torch::Tensor inThresh
     i64InnerDataNum = std::accumulate(inDataSlice.begin(), inDataSlice.end(), (int64_t)1, std::multiplies<IntArrayRef::value_type>());
   }
   
-  const dim3 threadsPerBlock(8,16,4);
-  const dim3 numBlocks((i64BatchSize + threadsPerBlock.x-1)/threadsPerBlock.x, (i64NumTrees + threadsPerBlock.y-1)/threadsPerBlock.y, (i64InnerDataNum + threadsPerBlock.z-1)/threadsPerBlock.z);
+  const dim3 threadsPerBlock(16,8,8);
+  const dim3 numBlocks((i64InnerDataNum + threadsPerBlock.x-1)/threadsPerBlock.x, (i64BatchSize + threadsPerBlock.y-1)/threadsPerBlock.y, (i64NumTrees + threadsPerBlock.z-1)/threadsPerBlock.z);
 
   LeafMapKernel<TreeTraitsTypeGPU><<<numBlocks, threadsPerBlock>>>(p_inData, p_inThresholds, p_inOrdinals, p_outData, 
     i64TreeDepth, i64NumDecisionsPerTree, i64NumTrees, i64BatchSize, i64NumChannels, i64InnerDataNum);
@@ -849,8 +849,8 @@ std::vector<torch::Tensor> hingetree_gpu_marginmap(torch::Tensor inData, torch::
     i64InnerDataNum = std::accumulate(inDataSlice.begin(), inDataSlice.end(), (int64_t)1, std::multiplies<IntArrayRef::value_type>());
   }
   
-  const dim3 threadsPerBlock(8,16,4);
-  const dim3 numBlocks((i64BatchSize + threadsPerBlock.x-1)/threadsPerBlock.x, (i64NumTrees + threadsPerBlock.y-1)/threadsPerBlock.y, (i64InnerDataNum + threadsPerBlock.z-1)/threadsPerBlock.z);
+  const dim3 threadsPerBlock(16,8,8);
+  const dim3 numBlocks((i64InnerDataNum + threadsPerBlock.x-1)/threadsPerBlock.x, (i64BatchSize + threadsPerBlock.y-1)/threadsPerBlock.y, (i64NumTrees + threadsPerBlock.z-1)/threadsPerBlock.z);
 
   MarginMapKernel<TreeTraitsTypeGPU><<<numBlocks, threadsPerBlock>>>(p_inData, p_inThresholds, p_inOrdinals, p_outMargins, p_outOrdinals, 
     i64TreeDepth, i64NumDecisionsPerTree, i64NumTrees, i64BatchSize, i64NumChannels, i64InnerDataNum);

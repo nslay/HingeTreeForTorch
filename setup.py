@@ -20,7 +20,7 @@ from setuptools import setup, Extension
 import torch.cuda
 from torch.utils import cpp_extension
 
-sourceFiles = [ 'hingetree.cpp', 'hingetrie.cpp', 'ImageToMatrix.cpp', 'hingetree_conv.cpp', 'hingetree_fused_linear.cpp', 'expand.cpp', 'Timer.cpp' ]
+sourceFiles = [ 'hingetree.cpp', 'hingetrie.cpp', 'ImageToMatrix.cpp', 'hingetree_conv.cpp', 'hingetree_fused_linear.cpp', 'hingetree_fusion.cpp', 'expand.cpp', 'Timer.cpp' ]
 extraCflags = [ '-O2' ]
 extraCudaFlags = [ '-O2' ]
 
@@ -29,6 +29,7 @@ if torch.cuda.is_available():
   sourceFiles.append('ImageToMatrix_gpu.cu')
   sourceFiles.append('hingetree_conv_gpu.cu')
   sourceFiles.append('hingetree_fused_linear_gpu.cu')
+  sourceFiles.append('hingetree_fusion_gpu.cu')
   sourceFiles.append('expand_gpu.cu')
   extraCflags.append('-DWITH_CUDA=1')
   extraCudaFlags.append('-DWITH_CUDA=1')

@@ -206,6 +206,105 @@ class HingeTreeFusedLinear(HingeTree):
 
         return inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad, inLinearWeightsGrad, inLinearBiasGrad
 
+class HingeFernFusedLinear(HingeFern):
+    @staticmethod
+    def forward(ctx, inData, inThresholds, inOrdinals, inWeights, inLinearWeights, inLinearBias):
+        if _is_deterministic() and inData.device.type != "cpu":
+            raise RuntimeError("No deterministic implementation of forward for hinge fern + linear on GPUs.")
+
+        ctx.save_for_backward(inData, inThresholds, inOrdinals, inWeights, inLinearWeights, inLinearBias)
+
+        return hingetree_cpp.fern_fused_linear_forward(inData, inThresholds, inOrdinals, inWeights, inLinearWeights, inLinearBias)
+
+    @staticmethod
+    def backward(ctx, outDataGrad):
+        if _is_deterministic() and outDataGrad.device.type != "cpu":
+            raise RuntimeError("No deterministic implementation of backpropagation for hinge fern + linear on GPUs.")
+
+        inData, inThresholds, inOrdinals, inWeights, inLinearWeights, inLinearBias = ctx.saved_tensors
+
+        inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad, inLinearWeightsGrad, inLinearBiasGrad = hingetree_cpp.fern_fused_linear_backward(inData, ctx.needs_input_grad[0], inThresholds, ctx.needs_input_grad[1], inOrdinals, ctx.needs_input_grad[2], inWeights, ctx.needs_input_grad[3], inLinearWeights, ctx.needs_input_grad[4], inLinearBias, ctx.needs_input_grad[5], outDataGrad.contiguous())
+
+        return inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad, inLinearWeightsGrad, inLinearBiasGrad
+
+class HingeTreeFusion(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, inImg, inVec, inThresholds, inOrdinals, inWeights):
+        ctx.save_for_backward(inImg, inVec, inThresholds, inOrdinals, inWeights)
+
+        return hingetree_cpp.tree_fusion_forward(inImg, inVec, inThresholds, inOrdinals, inWeights)
+
+    @staticmethod
+    def backward(ctx, outDataGrad):
+        if _is_deterministic() and outDataGrad.device.type != "cpu":
+            raise RuntimeError("No deterministic implementation of backpropagation for hinge tree fusion on GPUs.")
+
+        inImg, inVec, inThresholds, inOrdinals, inWeights = ctx.saved_tensors
+
+        inImgGrad, inVecGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad = hingetree_cpp.tree_fusion_backward(inImg, ctx.needs_input_grad[0], inVec, ctx.needs_input_grad[1], inThresholds, ctx.needs_input_grad[2], inOrdinals, ctx.needs_input_grad[3], inWeights, ctx.needs_input_grad[4], outDataGrad.contiguous())
+
+        return inImgGrad, inVecGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad
+
+class HingeFernFusion(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, inImg, inVec, inThresholds, inOrdinals, inWeights):
+        ctx.save_for_backward(inImg, inVec, inThresholds, inOrdinals, inWeights)
+
+        return hingetree_cpp.fern_fusion_forward(inImg, inVec, inThresholds, inOrdinals, inWeights)
+
+    @staticmethod
+    def backward(ctx, outDataGrad):
+        if _is_deterministic() and outDataGrad.device.type != "cpu":
+            raise RuntimeError("No deterministic implementation of backpropagation for hinge fern fusion on GPUs.")
+
+        inImg, inVec, inThresholds, inOrdinals, inWeights = ctx.saved_tensors
+
+        inImgGrad, inVecGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad = hingetree_cpp.fern_fusion_backward(inImg, ctx.needs_input_grad[0], inVec, ctx.needs_input_grad[1], inThresholds, ctx.needs_input_grad[2], inOrdinals, ctx.needs_input_grad[3], inWeights, ctx.needs_input_grad[4], outDataGrad.contiguous())
+
+        return inImgGrad, inVecGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad
+
+class HingeTreeFusionFusedLinear(HingeTreeFusion):
+    @staticmethod
+    def forward(ctx, inImg, inVec, inThresholds, inOrdinals, inWeights, inLinearWeights, inLinearBias):
+        if _is_deterministic() and inImg.device.type != "cpu":
+            raise RuntimeError("No deterministic implementation of forward for hinge tree fusion + linear on GPUs.")
+
+        ctx.save_for_backward(inImg, inVec, inThresholds, inOrdinals, inWeights, inLinearWeights, inLinearBias)
+
+        return hingetree_cpp.tree_fusion_fused_linear_forward(inImg, inVec, inThresholds, inOrdinals, inWeights, inLinearWeights, inLinearBias)
+
+    @staticmethod
+    def backward(ctx, outDataGrad):
+        if _is_deterministic() and outDataGrad.device.type != "cpu":
+            raise RuntimeError("No deterministic implementation of backpropagation for hinge tree fusion + linear on GPUs.")
+
+        inImg, inVec, inThresholds, inOrdinals, inWeights, inLinearWeights, inLinearBias = ctx.saved_tensors
+
+        inImgGrad, inVecGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad, inLinearWeightsGrad, inLinearBiasGrad = hingetree_cpp.tree_fusion_fused_linear_backward(inImg, ctx.needs_input_grad[0], inVec, ctx.needs_input_grad[1], inThresholds, ctx.needs_input_grad[2], inOrdinals, ctx.needs_input_grad[3], inWeights, ctx.needs_input_grad[4], inLinearWeights, ctx.needs_input_grad[5], inLinearBias, ctx.needs_input_grad[6], outDataGrad.contiguous())
+
+        return inImgGrad, inVec, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad, inLinearWeightsGrad, inLinearBiasGrad
+
+class HingeFernFusionFusedLinear(HingeFernFusion):
+    @staticmethod
+    def forward(ctx, inImg, inVec, inThresholds, inOrdinals, inWeights, inLinearWeights, inLinearBias):
+        if _is_deterministic() and inImg.device.type != "cpu":
+            raise RuntimeError("No deterministic implementation of forward for hinge fern fusion + linear on GPUs.")
+
+        ctx.save_for_backward(inImg, inVec, inThresholds, inOrdinals, inWeights, inLinearWeights, inLinearBias)
+
+        return hingetree_cpp.fern_fusion_fused_linear_forward(inImg, inVec, inThresholds, inOrdinals, inWeights, inLinearWeights, inLinearBias)
+
+    @staticmethod
+    def backward(ctx, outDataGrad):
+        if _is_deterministic() and outDataGrad.device.type != "cpu":
+            raise RuntimeError("No deterministic implementation of backpropagation for hinge fern fusion + linear on GPUs.")
+
+        inImgGrad, inVecGrad, inThresholds, inOrdinals, inWeights, inLinearWeights, inLinearBias = ctx.saved_tensors
+
+        inImgGrad, inVecGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad, inLinearWeightsGrad, inLinearBiasGrad = hingetree_cpp.fern_fusion_fused_linear_backward(inImg, ctx.needs_input_grad[0], inVec, ctx.needs_input_grad[1], inThresholds, ctx.needs_input_grad[2], inOrdinals, ctx.needs_input_grad[3], inWeights, ctx.needs_input_grad[4], inLinearWeights, ctx.needs_input_grad[5], inLinearBias, ctx.needs_input_grad[6], outDataGrad.contiguous())
+
+        return inImgGrad, inVecGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad, inLinearWeightsGrad, inLinearBiasGrad
+
 # Convolution operations below
 
 class HingeTreeConv1d(torch.autograd.Function):

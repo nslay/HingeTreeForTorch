@@ -1672,6 +1672,21 @@ bool hingetrie_init_medians(torch::Tensor inData, torch::Tensor inThresholds, to
 torch::Tensor hingetree_fused_linear_forward(torch::Tensor inData, torch::Tensor inThresholds, torch::Tensor inOrdinals, torch::Tensor inWeights, torch::Tensor inLinearWeights, torch::Tensor inLinearBias);
 std::vector<torch::Tensor> hingetree_fused_linear_backward(torch::Tensor inData, bool bInDataGrad, torch::Tensor inThresholds, bool bInThresholdsGrad, torch::Tensor inOrdinals, bool bInOrdinalsGrad, torch::Tensor inWeights, bool bInWeightsGrad, torch::Tensor inLinearWeights, bool bInLinearWeightsGrad, torch::Tensor inLinearBias, bool bInLinearBiasGrad, torch::Tensor outDataGrad);
 
+torch::Tensor hingefern_fused_linear_forward(torch::Tensor inData, torch::Tensor inThresholds, torch::Tensor inOrdinals, torch::Tensor inWeights, torch::Tensor inLinearWeights, torch::Tensor inLinearBias);
+std::vector<torch::Tensor> hingefern_fused_linear_backward(torch::Tensor inData, bool bInDataGrad, torch::Tensor inThresholds, bool bInThresholdsGrad, torch::Tensor inOrdinals, bool bInOrdinalsGrad, torch::Tensor inWeights, bool bInWeightsGrad, torch::Tensor inLinearWeights, bool bInLinearWeightsGrad, torch::Tensor inLinearBias, bool bInLinearBiasGrad, torch::Tensor outDataGrad);
+
+torch::Tensor hingetree_fusion_forward(torch::Tensor inImg, torch::Tensor inVec, torch::Tensor inThresholds, torch::Tensor inOrdinals, torch::Tensor inWeights);
+std::vector<torch::Tensor> hingetree_fusion_backward(torch::Tensor inImg, bool bInImgGrad, torch::Tensor inVec, bool bInVecGrad, torch::Tensor inThresholds, bool bInThresholdsGrad, torch::Tensor inOrdinals, bool bInOrdinalsGrad, torch::Tensor inWeights, bool bInWeightsGrad, torch::Tensor outDataGrad);
+
+torch::Tensor hingefern_fusion_forward(torch::Tensor inImg, torch::Tensor inVec, torch::Tensor inThresholds, torch::Tensor inOrdinals, torch::Tensor inWeights);
+std::vector<torch::Tensor> hingefern_fusion_backward(torch::Tensor inImg, bool bInImgGrad, torch::Tensor inVec, bool bInVecGrad, torch::Tensor inThresholds, bool bInThresholdsGrad, torch::Tensor inOrdinals, bool bInOrdinalsGrad, torch::Tensor inWeights, bool bInWeightsGrad, torch::Tensor outDataGrad);
+
+torch::Tensor hingetree_fusion_fused_linear_forward(torch::Tensor inImg, torch::Tensor inVec, torch::Tensor inThresholds, torch::Tensor inOrdinals, torch::Tensor inWeights, torch::Tensor inLinearWeights, torch::Tensor inLinearBias);
+std::vector<torch::Tensor> hingetree_fusion_fused_linear_backward(torch::Tensor inImg, bool bInImgGrad, torch::Tensor inVec, bool bInVecGrad, torch::Tensor inThresholds, bool bInThresholdsGrad, torch::Tensor inOrdinals, bool bInOrdinalsGrad, torch::Tensor inWeights, bool bInWeightsGrad, torch::Tensor inLinearWeights, bool bInLinearWeightsGrad, torch::Tensor inLinearBias, bool bInLinearBiasGrad, torch::Tensor outDataGrad);
+
+torch::Tensor hingefern_fusion_fused_linear_forward(torch::Tensor inImg, torch::Tensor inVec, torch::Tensor inThresholds, torch::Tensor inOrdinals, torch::Tensor inWeights, torch::Tensor inLinearWeights, torch::Tensor inLinearBias);
+std::vector<torch::Tensor> hingefern_fusion_fused_linear_backward(torch::Tensor inImg, bool bInImgGrad, torch::Tensor inVec, bool bInVecGrad, torch::Tensor inThresholds, bool bInThresholdsGrad, torch::Tensor inOrdinals, bool bInOrdinalsGrad, torch::Tensor inWeights, bool bInWeightsGrad, torch::Tensor inLinearWeights, bool bInLinearWeightsGrad, torch::Tensor inLinearBias, bool bInLinearBiasGrad, torch::Tensor outDataGrad);
+
 torch::Tensor contract(torch::Tensor inData, IntArrayRef window, IntArrayRef padding);
 torch::Tensor expand(torch::Tensor inData, IntArrayRef padding);
 
@@ -1722,6 +1737,21 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
 
   m.def("tree_fused_linear_forward", &hingetree_fused_linear_forward, "Hinge tree + linear fused forward.");
   m.def("tree_fused_linear_backward", &hingetree_fused_linear_backward, "Hinge tree + linear fused backward.");
+
+  m.def("fern_fused_linear_forward", &hingefern_fused_linear_forward, "Hinge fern + linear fused forward.");
+  m.def("fern_fused_linear_backward", &hingefern_fused_linear_backward, "Hinge fern + linear fused backward.");
+
+  m.def("tree_fusion_forward", &hingetree_fusion_forward, "Hinge tree image + feature vector fusion.");
+  m.def("tree_fusion_backward", &hingetree_fusion_backward, "Hinge tree image + feature vector fusion.");
+
+  m.def("fern_fusion_forward", &hingefern_fusion_forward, "Hinge fern image + feature vector fusion.");
+  m.def("fern_fusion_backward", &hingefern_fusion_backward, "Hinge fern image + feature vector fusion.");
+
+  m.def("tree_fusion_fused_linear_forward", &hingetree_fusion_fused_linear_forward, "Hinge tree + feature vector fusion + linear fused forward.");
+  m.def("tree_fusion_fused_linear_backward", &hingetree_fusion_fused_linear_backward, "Hinge tree + feature vector fusion + linear fused backward.");
+
+  m.def("fern_fusion_fused_linear_forward", &hingefern_fusion_fused_linear_forward, "Hinge fern + feature vector fusion + linear fused forward.");
+  m.def("fern_fusion_fused_linear_backward", &hingefern_fusion_fused_linear_backward, "Hinge fern + feature vector fusion + linear fused backward.");
 
   m.def("contract", &contract, "Collapse batched 2D or 3D image to 2D or 3D images of patches.");
   m.def("expand", &expand, "Expand batched 2D or 3D images of patches to 2D or 3D images.");
