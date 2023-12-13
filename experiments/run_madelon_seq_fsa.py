@@ -26,7 +26,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
-from LinearFSA import LinearFSA
+from HingeTree import LinearFSA
 from RandomHingeForest import RandomHingeForest, RandomHingeFern
 from deterministic import set_deterministic
 import datasets
