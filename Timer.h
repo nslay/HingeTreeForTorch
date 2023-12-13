@@ -39,11 +39,9 @@
 #endif // !WIN32_LEAN_AND_MEAN
 
 #include <Windows.h>
-#elif defined(__unix__)
-#include <time.h>
-#else
-#error "Unsupported operating system."
-#endif
+#else // !_WIN32
+#include <chrono>
+#endif // _WIN32
 
 #include <cstring>
 #include <string>
@@ -88,12 +86,9 @@ public:
     else {
       m_ullStart = GetTickCount64();
     }
+#else // !_WIN32
+    m_stStart = ClockType::now();
 #endif // _WIN32
-
-#ifdef __unix__
-    std::memset(&m_stStart, 0, sizeof(m_stStart));
-    clock_gettime(CLOCK_MONOTONIC, &m_stStart);
-#endif // __unix__
   }
 
   void Stop() {
@@ -127,17 +122,10 @@ public:
       ULONGLONG ullStop = GetTickCount64();
       return (ullStop - m_ullStart)/1000.0;
     }
+#else // !_WIN32
+    ClockType::time_point stStop = ClockType::now();
+    return std::chrono::duration_cast<DurationType>(stStop - m_stStart).count();
 #endif // _WIN32
-
-#ifdef __unix__
-    struct timespec stStop;
-    std::memset(&stStop, 0, sizeof(stStop));
-    
-    clock_gettime(CLOCK_MONOTONIC, &stStop);
-
-    // Same as converting both to seconds and subtracting the converted results
-    return (stStop.tv_sec - m_stStart.tv_sec) + (stStop.tv_nsec - m_stStart.tv_nsec)/1e9;
-#endif // __unix__
   }
 
   void Print(std::ostream &os) const {
@@ -165,12 +153,12 @@ private:
   static LARGE_INTEGER m_s_stQpcFrequency;
   LARGE_INTEGER m_stQpcStart;
   ULONGLONG m_ullStart;
+#else // !_WIN32
+  using ClockType = std::chrono::high_resolution_clock;
+  using DurationType = std::chrono::duration<double>;
+
+  ClockType::time_point m_stStart;
 #endif // _WIN32
-
-#ifdef __unix__
-  struct timespec m_stStart;
-#endif // __unix__
-
 };
 
 inline std::ostream & operator<<(std::ostream &os, const Timer &clTimer) {
