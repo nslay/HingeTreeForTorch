@@ -16,4 +16,15 @@
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # 
 
-from .RandomHingeForest import *
+from ._RandomHingeForest import (
+    RandomHingeForest,
+    RandomHingeFern,
+    RandomHingeTrie,
+    RandomHingeForestFusedLinear,
+    RandomHingeFernFusedLinear,
+    RandomHingeForestFusion,
+    RandomHingeFernFusion,
+    RandomHingeForestFusionFusedLinear,
+    RandomHingeFernFusionFusedLinear,
+)
+

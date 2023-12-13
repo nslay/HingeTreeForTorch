@@ -16,6 +16,33 @@
 # THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # 
 
-from .HingeTree import *
-from .HingeTreeConv import *
-from .LinearFSA import *
+from ._HingeTree import (
+    contract,
+    expand,
+    Contract,
+    Expand,
+    HingeTree,
+    HingeFern,
+    HingeTreeFusedLinear,
+    HingeFernFusedLinear,
+    HingeTreeFusion,
+    HingeFernFusion,
+    HingeTreeFusionFusedLinear,
+    HingeFernFusionFusedLinear,
+    _HingeTreeConv1d,
+    _HingeTreeConv2d,
+    _HingeTreeConv3d,
+    _HingeFernConv1d,
+    _HingeFernConv2d,
+    _HingeFernConv3d,
+    HingeTrie,
+)
+from ._HingeTreeConv import (
+    HingeTreeConv1d,
+    HingeTreeConv2d,
+    HingeTreeConv3d,
+    HingeFernConv1d,
+    HingeFernConv2d,
+    HingeFernConv3d,
+)
+from ._LinearFSA import LinearFSA
