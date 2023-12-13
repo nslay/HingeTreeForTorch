@@ -3,35 +3,34 @@ HingeTreeForTorch is a C++ PyTorch extension of RandomHingeForest.
 
 # Tested Environments
 HingeTreeForTorch has been built and tested in the following environments
-- Ubuntu 18.04
-  - PyTorch 1.7.0
+- Ubuntu 20.04
+  - PyTorch 1.12.1+cu113
   - Python 3.8.0
-  - GCC 7.5
-  - CUDA 10.1
-  - CUDNN 7.6.3
-- CentOS 7.5
-  - PyTorch 1.7.1
-  - Python 3.8.5
-  - GCC 8.3.0 and 9.2.0
-  - CUDA 10.2 and 11.0.3
-  - CUDNN 7.6.5 and 8.0.3
-- OS X 10.15.7
+  - GCC 9.4.0
+  - CUDA 11.3
+- Rocky Linux 8.7
+  - PyTorch 2.0.1+cu117
+  - Python 3.9.15
+  - GCC 9.2.0
+  - CUDA 11.7
+- OS X 10.15.7 (old information)
   - PyTorch 1.7.1
   - Python 3.8.2
   - XCode 12.4 (Clang 12.0.0)
 - Windows 10
-  - PyTorch 1.8.0 Nightly
-  - Python 3.8.5
-  - Visual Studio 2017 Community Edition
-  - CUDA 10.2
-  - CUDNN 7.6.5
+  - PyTorch 2.0.1+cpu
+  - Python 3.11.4
+  - Visual Studio 2022 Community Edition
 
 # Compiling HingeTree
 The HingeTree PyTorch extension can be compiled using setup.py
 ```shell
-python setup.py build
-python setup.py install
+python setup.py bdist_wheel build
+cd dist
+pip install hingetree_cpp-<version>-<os>_<arch>.whl
 ```
+
+**NOTE**: Make sure you delete the 'build' folder.
 
 **NOTE**: Ensure that you are using Python 3.6 or later.
 
