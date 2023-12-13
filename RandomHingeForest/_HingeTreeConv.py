@@ -74,7 +74,7 @@ class HingeTreeConv1d(nn.Module):
         self.ordinals = nn.Parameter(ordinals, requires_grad=False)
 
     def forward(self, x):
-        return HingeTree._HingeTreeConv1d.apply(x, self.thresholds, self.ordinals, self.weights, self.kernel_size, self.stride, self.padding, self.dilation)
+        return HingeTree.HingeTreeConv1d.apply(x, self.thresholds, self.ordinals, self.weights, self.kernel_size, self.stride, self.padding, self.dilation)
 
 class HingeTreeConv2d(nn.Module):
     __constants__ = [ "in_channels", "out_channels", "depth", "extra_outputs", "kernel_size", "stride", "padding", "dilation", "init_type" ]
@@ -119,7 +119,7 @@ class HingeTreeConv2d(nn.Module):
         self.ordinals = nn.Parameter(ordinals, requires_grad=False)
 
     def forward(self, x):
-        return HingeTree._HingeTreeConv2d.apply(x, self.thresholds, self.ordinals, self.weights, self.kernel_size, self.stride, self.padding, self.dilation)
+        return HingeTree.HingeTreeConv2d.apply(x, self.thresholds, self.ordinals, self.weights, self.kernel_size, self.stride, self.padding, self.dilation)
 
 class HingeTreeConv3d(nn.Module):
     __constants__ = [ "in_channels", "out_channels", "depth", "extra_outputs", "kernel_size", "stride", "padding", "dilation", "init_type" ]
@@ -164,7 +164,7 @@ class HingeTreeConv3d(nn.Module):
         self.ordinals = nn.Parameter(ordinals, requires_grad=False)
 
     def forward(self, x):
-        return HingeTree._HingeTreeConv3d.apply(x, self.thresholds, self.ordinals, self.weights, self.kernel_size, self.stride, self.padding, self.dilation)
+        return HingeTree.HingeTreeConv3d.apply(x, self.thresholds, self.ordinals, self.weights, self.kernel_size, self.stride, self.padding, self.dilation)
 
 class HingeFernConv1d(nn.Module):
     __constants__ = [ "in_channels", "out_channels", "depth", "extra_outputs", "kernel_size", "stride", "padding", "dilation", "init_type" ]
@@ -209,7 +209,7 @@ class HingeFernConv1d(nn.Module):
         self.ordinals = nn.Parameter(ordinals, requires_grad=False)
 
     def forward(self, x):
-        return HingeTree._HingeFernConv1d.apply(x, self.thresholds, self.ordinals, self.weights, self.kernel_size, self.stride, self.padding, self.dilation)
+        return HingeTree.HingeFernConv1d.apply(x, self.thresholds, self.ordinals, self.weights, self.kernel_size, self.stride, self.padding, self.dilation)
 
 class HingeFernConv2d(nn.Module):
     __constants__ = [ "in_channels", "out_channels", "depth", "extra_outputs", "kernel_size", "stride", "padding", "dilation", "init_type" ]
@@ -254,7 +254,7 @@ class HingeFernConv2d(nn.Module):
         self.ordinals = nn.Parameter(ordinals, requires_grad=False)
 
     def forward(self, x):
-        return HingeTree._HingeFernConv2d.apply(x, self.thresholds, self.ordinals, self.weights, self.kernel_size, self.stride, self.padding, self.dilation)
+        return HingeTree.HingeFernConv2d.apply(x, self.thresholds, self.ordinals, self.weights, self.kernel_size, self.stride, self.padding, self.dilation)
 
 class HingeFernConv3d(nn.Module):
     __constants__ = [ "in_channels", "out_channels", "depth", "extra_outputs", "kernel_size", "stride", "padding", "dilation", "init_type" ]
@@ -299,5 +299,5 @@ class HingeFernConv3d(nn.Module):
         self.ordinals = nn.Parameter(ordinals, requires_grad=False)
 
     def forward(self, x):
-        return HingeTree._HingeFernConv3d.apply(x, self.thresholds, self.ordinals, self.weights, self.kernel_size, self.stride, self.padding, self.dilation)
+        return HingeTree.HingeFernConv3d.apply(x, self.thresholds, self.ordinals, self.weights, self.kernel_size, self.stride, self.padding, self.dilation)
 

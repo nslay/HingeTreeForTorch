@@ -307,7 +307,7 @@ class HingeFernFusionFusedLinear(HingeFernFusion):
 
 # Convolution operations below
 
-class _HingeTreeConv1d(torch.autograd.Function):
+class HingeTreeConv1d(torch.autograd.Function):
     @staticmethod
     def forward(ctx, inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation):
         ctx.save_for_backward(inData, inThresholds, inOrdinals, inWeights)
@@ -330,7 +330,7 @@ class _HingeTreeConv1d(torch.autograd.Function):
 
         return inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad, None, None, None, None
 
-class _HingeTreeConv2d(torch.autograd.Function):
+class HingeTreeConv2d(torch.autograd.Function):
     @staticmethod
     def forward(ctx, inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation):
         ctx.save_for_backward(inData, inThresholds, inOrdinals, inWeights)
@@ -353,7 +353,7 @@ class _HingeTreeConv2d(torch.autograd.Function):
 
         return inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad, None, None, None, None
 
-class _HingeTreeConv3d(torch.autograd.Function):
+class HingeTreeConv3d(torch.autograd.Function):
     @staticmethod
     def forward(ctx, inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation):
         ctx.save_for_backward(inData, inThresholds, inOrdinals, inWeights)
@@ -376,7 +376,7 @@ class _HingeTreeConv3d(torch.autograd.Function):
 
         return inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad, None, None, None, None
 
-class _HingeFernConv1d(torch.autograd.Function):
+class HingeFernConv1d(torch.autograd.Function):
     @staticmethod
     def forward(ctx, inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation):
         ctx.save_for_backward(inData, inThresholds, inOrdinals, inWeights)
@@ -399,7 +399,7 @@ class _HingeFernConv1d(torch.autograd.Function):
 
         return inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad, None, None, None, None
 
-class _HingeFernConv2d(torch.autograd.Function):
+class HingeFernConv2d(torch.autograd.Function):
     @staticmethod
     def forward(ctx, inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation):
         ctx.save_for_backward(inData, inThresholds, inOrdinals, inWeights)
@@ -422,7 +422,7 @@ class _HingeFernConv2d(torch.autograd.Function):
 
         return inDataGrad, inThresholdsGrad, inOrdinalsGrad, inWeightsGrad, None, None, None, None
 
-class _HingeFernConv3d(torch.autograd.Function):
+class HingeFernConv3d(torch.autograd.Function):
     @staticmethod
     def forward(ctx, inData, inThresholds, inOrdinals, inWeights, kernelSize, stride, padding, dilation):
         ctx.save_for_backward(inData, inThresholds, inOrdinals, inWeights)

@@ -29,20 +29,12 @@ from ._HingeTree import (
     HingeFernFusion,
     HingeTreeFusionFusedLinear,
     HingeFernFusionFusedLinear,
-    _HingeTreeConv1d,
-    _HingeTreeConv2d,
-    _HingeTreeConv3d,
-    _HingeFernConv1d,
-    _HingeFernConv2d,
-    _HingeFernConv3d,
-    HingeTrie,
-)
-from ._HingeTreeConv import (
     HingeTreeConv1d,
     HingeTreeConv2d,
     HingeTreeConv3d,
     HingeFernConv1d,
     HingeFernConv2d,
     HingeFernConv3d,
+    HingeTrie,
 )
 from ._LinearFSA import LinearFSA

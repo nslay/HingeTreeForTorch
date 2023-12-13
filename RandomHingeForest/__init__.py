@@ -27,4 +27,11 @@ from ._RandomHingeForest import (
     RandomHingeForestFusionFusedLinear,
     RandomHingeFernFusionFusedLinear,
 )
-
+from ._HingeTreeConv import (
+    HingeTreeConv1d,
+    HingeTreeConv2d,
+    HingeTreeConv3d,
+    HingeFernConv1d,
+    HingeFernConv2d,
+    HingeFernConv3d,
+)
